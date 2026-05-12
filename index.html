@@ -75,7 +75,12 @@
 
     .question-card { background: white; border-radius: 24px; padding: 24px 18px; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.08); margin-bottom: 16px; border: 3px solid #FFF0F0; }
     .question-emoji { font-size: 4.2rem; margin-bottom: 8px; display: block; animation: popIn 0.5s ease; }
-    .question-chinese { font-size: 1.3rem; color: #555; margin-bottom: 4px; font-weight: 700; }
+    .question-chinese { font-size: 1.3rem; color: #555; margin-bottom: 4px; font-weight: 700; display: inline; }
+    .speak-btn {
+      background: none; border: none; font-size: 1.5rem; cursor: pointer;
+      vertical-align: middle; margin-left: 4px; transition: transform 0.15s;
+    }
+    .speak-btn:hover { transform: scale(1.25); }
     .question-english { font-size: 1.5rem; color: #4ECDC4; margin-bottom: 4px; font-weight: 700; letter-spacing: 1px; display: none; }
     .question-hint { font-size: 0.8rem; color: #bbb; margin-bottom: 6px; min-height: 20px; }
 
@@ -223,8 +228,8 @@
     </div>
     <div class="question-card" id="question-card">
       <span class="question-emoji" id="question-emoji">🚗</span>
-      <div class="question-chinese" id="question-chinese">汽车</div>
-      <div class="question-english" id="question-english" style="display:none;">car</div>
+      <div class="question-chinese" id="question-chinese">汽车</div><button class="speak-btn" id="speak-btn" onclick="speakCurrentWord()" title="听发音">🔊</button>
+      <div class="question-english" id="question-english" style="display:none;">car <button class="speak-btn" onclick="speakCurrentWord()" title="听发音">🔊</button></div>
       <div class="question-hint" id="question-hint">选择正确的英文单词</div>
       <div class="timer-bar-wrap" id="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
       <div class="feedback-toast" id="feedback-toast"></div>
@@ -393,6 +398,11 @@
     if (!word) return;
     speakWithSweetVoice(word);
   }
+  // 点击喇叭按钮：朗读当前题目的英文单词
+  function speakCurrentWord() {
+    const q = state.questions && state.questions[state.currentIndex];
+    if (q && q.en) speakWithSweetVoice(q.en);
+  }
 
   // ============================================================
   //  选择逻辑
@@ -501,6 +511,8 @@
       startTimer();
     }
     updateComboBadge();
+    // 自动朗读当前单词的英文发音
+    if(q.en) speakWord(q.en);
   }
 
   function buildSpellHint(en){ const parts=en.split(' '); const hints=parts.map(p=>p[0]+' _'.repeat(p.length-1)); const total=en.replace(/\s/g,'').length; let hint=hints.join('  ')+` (${total}字母`; if(en.includes(' '))hint+=',含空格'; hint+=`,首字母${en[0]})`; return hint; }
@@ -640,6 +652,8 @@
       btn.onclick = () => handleAlphaAnswer(opt, btn);
       optsContainer.appendChild(btn);
     });
+    // 自动朗读当前字母发音
+    speakLetter();
   }
 
   function handleAlphaAnswer(selected, btnEl) {
