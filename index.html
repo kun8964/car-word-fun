@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚗 Car Word Fun — 汽车英文学习游戏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Comic Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #FFF5E6 0%, #FFE0F0 50%, #E0F7FA 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      padding: 20px;
+    }
+
+    /* ========== 开始页 ========== */
+    #start-screen {
+      text-align: center;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .start-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #FF6B6B;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 0 rgba(255,107,107,0.15);
+    }
+
+    .start-subtitle {
+      font-size: 1rem;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .car-showcase {
+      font-size: 4rem;
+      margin: 20px 0 30px;
+      animation: bounce 2s infinite;
+    }
+
+    .mode-select {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .mode-btn {
+      padding: 14px;
+      border: 3px solid #FFE66D;
+      border-radius: 16px;
+      background: white;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-btn:hover { background: #FFE66D; color: #333; transform: scale(1.03); }
+    .mode-btn.active { background: #FFE66D; border-color: #FFB800; color: #333; }
+
+    .mode-desc {
+      font-size: 0.82rem;
+      color: #999;
+      margin-top: -6px;
+      margin-bottom: 4px;
+      min-height: 18px;
+    }
+
+    .start-btn {
+      padding: 16px 60px;
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255,107,107,0.35);
+      transition: all 0.25s;
+      letter-spacing: 2px;
+    }
+    .start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,107,107,0.5); }
+    .start-btn:active { transform: translateY(0); }
+
+    /* ========== 游戏页 ========== */
+    #game-screen { display: none; animation: fadeIn 0.4s ease; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .score-badge {
+      background: linear-gradient(135deg, #4ECDC4, #44B09E);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 3px 12px rgba(78,205,196,0.3);
+    }
+
+    .progress-badge {
+      background: white;
+      color: #FF6B6B;
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1rem;
+      border: 2px solid #FFE0E0;
+    }
+
+    .quit-btn {
+      background: none;
+      border: 2px solid #ddd;
+      border-radius: 50px;
+      padding: 6px 16px;
+      color: #999;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quit-btn:hover { border-color: #FF6B6B; color: #FF6B6B; }
+
+    .question-card {
+      background: white;
+      border-radius: 24px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      border: 3px solid #FFF0F0;
+    }
+
+    .question-emoji {
+      font-size: 5rem;
+      margin-bottom: 12px;
+      display: block;
+      animation: popIn 0.5s ease;
+    }
+
+    .question-chinese {
+      font-size: 1.3rem;
+      color: #555;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .question-hint {
+      font-size: 0.9rem;
+      color: #bbb;
+      margin-bottom: 8px;
+    }
+
+    .feedback-toast {
+      display: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 10px;
+      animation: slideUp 0.3s ease;
+    }
+    .feedback-toast.correct {
+      background: #D4EDDA;
+      color: #155724;
+      display: block;
+    }
+    .feedback-toast.wrong {
+      background: #F8D7DA;
+      color: #721C24;
+      display: block;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .option-btn {
+      padding: 18px 10px;
+      border: 3px solid #E8E8E8;
+      border-radius: 16px;
+      background: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #444;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .option-btn:hover:not(.disabled) {
+      border-color: #4ECDC4;
+      background: #F0FFFD;
+      transform: translateY(-2px);
+    }
+    .option-btn.correct {
+      border-color: #4ECDC4;
+      background: #D4EDDA;
+      color: #155724;
+    }
+    .option-btn.wrong {
+      border-color: #FF6B6B;
+      background: #F8D7DA;
+      color: #721C24;
+    }
+    .option-btn.disabled { cursor: default; opacity: 0.6; }
+
+    .next-btn {
+      display: none;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #4ECDC4, #44B09E);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .next-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(78,205,196,0.4); }
+
+    /* ========== 结果页 ========== */
+    #result-screen { display: none; animation: fadeIn 0.6s ease; }
+
+    .result-card {
+      background: white;
+      border-radius: 28px;
+      padding: 35px 25px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      border: 3px solid #FFE66D;
+    }
+
+    .result-emoji { font-size: 4.5rem; margin-bottom: 15px; display: block; }
+
+    .result-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .result-title.great { color: #4ECDC4; }
+    .result-title.good { color: #FFB800; }
+    .result-title.try { color: #FF6B6B; }
+
+    .result-score {
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: #FF6B6B;
+      margin-bottom: 5px;
+    }
+
+    .result-detail {
+      font-size: 1rem;
+      color: #999;
+      margin-bottom: 25px;
+    }
+
+    .result-stars {
+      font-size: 2.2rem;
+      margin-bottom: 25px;
+      letter-spacing: 8px;
+    }
+
+    .result-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn-retry {
+      padding: 14px 30px;
+      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-retry:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,107,107,0.4); }
+
+    .btn-home {
+      padding: 14px 30px;
+      background: white;
+      color: #888;
+      border: 3px solid #E8E8E8;
+      border-radius: 50px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-home:hover { border-color: #4ECDC4; color: #4ECDC4; }
+
+    /* ========== 动画 ========== */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes confetti {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-80px) rotate(360deg); opacity: 0; }
+    }
+
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: confetti 1s ease-out forwards;
+      pointer-events: none;
+    }
+
+    /* 响应式 */
+    @media (max-width: 400px) {
+      .start-title { font-size: 1.7rem; }
+      .question-emoji { font-size: 3.5rem; }
+      .option-btn { padding: 14px 8px; font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ====== 开始页 ====== -->
+  <div id="start-screen">
+    <div class="start-title">🚗 Car Word Fun</div>
+    <div class="start-subtitle">通过认识汽车，轻松学英文！</div>
+    <div class="car-showcase">🚗 🚌 🚒 🚜 🏎️</div>
+
+    <div class="mode-select">
+      <button class="mode-btn active" data-mode="easy" onclick="selectMode('easy', this)">
+        🌱 基础模式（10题）
+      </button>
+      <div class="mode-desc" id="mode-desc-easy">适合刚开始学英文的小朋友</div>
+
+      <button class="mode-btn" data-mode="normal" onclick="selectMode('normal', this)">
+        🌟 进阶模式（20题）
+      </button>
+      <div class="mode-desc" id="mode-desc-normal">已经认识一些汽车单词</div>
+
+      <button class="mode-btn" data-mode="hard" onclick="selectMode('hard', this)">
+        🔥 挑战模式（25题）
+      </button>
+      <div class="mode-desc" id="mode-desc-hard">汽车单词小达人来试试！</div>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">开始游戏 🎮</button>
+  </div>
+
+  <!-- ====== 游戏页 ====== -->
+  <div id="game-screen">
+    <div class="top-bar">
+      <div class="score-badge" id="score-badge">⭐ 0 分</div>
+      <button class="quit-btn" onclick="quitGame()">退出</button>
+      <div class="progress-badge" id="progress-badge">1 / 10</div>
+    </div>
+
+    <div class="question-card">
+      <span class="question-emoji" id="question-emoji">🚗</span>
+      <div class="question-chinese" id="question-chinese">汽车</div>
+      <div class="question-hint" id="question-hint">选择正确的英文单词</div>
+      <div class="feedback-toast" id="feedback-toast"></div>
+    </div>
+
+    <div class="options-grid" id="options-grid">
+      <!-- JS 动态生成 -->
+    </div>
+
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一题 ➡️</button>
+  </div>
+
+  <!-- ====== 结果页 ====== -->
+  <div id="result-screen">
+    <div class="result-card">
+      <span class="result-emoji" id="result-emoji">🎉</span>
+      <div class="result-title" id="result-title">太棒了！</div>
+      <div class="result-score" id="result-score">80 分</div>
+      <div class="result-detail" id="result-detail">答对 8 / 10 题</div>
+      <div class="result-stars" id="result-stars">⭐⭐⭐⭐☆</div>
+      <div class="result-btns">
+        <button class="btn-retry" onclick="retryGame()">再玩一次 🔄</button>
+        <button class="btn-home" onclick="goHome()">返回首页 🏠</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+//  词库数据
+// ============================================================
+const WORD_BANK = {
+  easy: [
+    { en: "car",       zh: "汽车",     emoji: "🚗" },
+    { en: "bus",       zh: "公交车",   emoji: "🚌" },
+    { en: "truck",     zh: "卡车",     emoji: "🚚" },
+    { en: "taxi",      zh: "出租车",   emoji: "🚕" },
+    { en: "bike",      zh: "自行车",   emoji: "🚲" },
+    { en: "train",     zh: "火车",     emoji: "🚂" },
+    { en: "boat",      zh: "船",       emoji: "🚤" },
+    { en: "plane",     zh: "飞机",     emoji: "✈️" },
+    { en: "firetruck", zh: "消防车",   emoji: "🚒" },
+    { en: "police car",zh: "警车",     emoji: "🚓" },
+  ],
+  normal: [
+    { en: "ambulance",  zh: "救护车",   emoji: "🚑" },
+    { en: "motorcycle", zh: "摩托车",   emoji: "🏍️" },
+    { en: "helicopter", zh: "直升机",   emoji: "🚁" },
+    { en: "subway",     zh: "地铁",     emoji: "🚇" },
+    { en: "tractor",    zh: "拖拉机",   emoji: "🚜" },
+    { en: "crane",      zh: "起重机",   emoji: "🏗️" },
+    { en: "bulldozer",  zh: "推土机",   emoji: "🚜" },
+    { en: "excavator",  zh: "挖掘机",   emoji: "🚜" },
+    { en: "forklift",   zh: "叉车",     emoji: "🚚" },
+    { en: "van",        zh: "面包车",   emoji: "🚐" },
+  ],
+  hard: [
+    { en: "convertible", zh: "敞篷车",   emoji: "🏎️" },
+    { en: "limousine",   zh: "豪华轿车", emoji: "🚗" },
+    { en: "scooter",     zh: "小摩托车", emoji: "🛵" },
+    { en: "unicycle",    zh: "独轮车",   emoji: "🚲" },
+    { en: "skateboard",  zh: "滑板",     emoji: "🛹" },
+  ],
+};
+
+// 所有单词合并（用于随机错误选项）
+const ALL_WORDS = [...WORD_BANK.easy, ...WORD_BANK.normal, ...WORD_BANK.hard];
+
+// ============================================================
+//  游戏状态
+// ============================================================
+let state = {
+  mode: "easy",
+  questions: [],    // 当前题目列表
+  currentIndex: 0,
+  score: 0,
+  answered: false,
+};
+
+// ============================================================
+//  模式选择
+// ============================================================
+function selectMode(mode, btnEl) {
+  state.mode = mode;
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  btnEl.classList.add("active");
+}
+
+// ============================================================
+//  开始游戏
+// ============================================================
+function startGame() {
+  const pool = getWordPool(state.mode);
+  state.questions = shuffleArray([...pool]).map(w => ({
+    ...w,
+    options: generateOptions(w, pool),
+  }));
+  state.currentIndex = 0;
+  state.score = 0;
+  state.answered = false;
+
+  document.getElementById("start-screen").style.display = "none";
+  document.getElementById("result-screen").style.display = "none";
+  document.getElementById("game-screen").style.display = "block";
+
+  renderQuestion();
+}
+
+function getWordPool(mode) {
+  if (mode === "easy")   return WORD_BANK.easy;
+  if (mode === "normal") return [...WORD_BANK.easy, ...WORD_BANK.normal];
+  return ALL_WORDS; // hard = 全部 25 题
+}
+
+// 为每道题生成 4 个选项（1 正确 + 3 随机错误）
+function generateOptions(correctWord, pool) {
+  const wrongPool = pool.filter(w => w.en !== correctWord.en);
+  const wrongs = shuffleArray(wrongPool).slice(0, 3);
+  const options = shuffleArray([correctWord, ...wrongs]);
+  return options; // [{en, zh, emoji}]
+}
+
+// ============================================================
+//  渲染题目
+// ============================================================
+function renderQuestion() {
+  const q = state.questions[state.currentIndex];
+  state.answered = false;
+
+  document.getElementById("question-emoji").textContent = q.emoji;
+  document.getElementById("question-chinese").textContent = q.zh;
+  document.getElementById("progress-badge").textContent =
+    `${state.currentIndex + 1} / ${state.questions.length}`;
+  document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
+  document.getElementById("feedback-toast").className = "feedback-toast";
+  document.getElementById("feedback-toast").style.display = "none";
+  document.getElementById("next-btn").style.display = "none";
+
+  const grid = document.getElementById("options-grid");
+  grid.innerHTML = "";
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn";
+    btn.innerHTML = `<span style="font-size:1.4rem">${opt.emoji}</span><br>${opt.en}`;
+    btn.onclick = () => handleAnswer(opt, q, btn);
+    grid.appendChild(btn);
+  });
+}
+
+// ============================================================
+//  处理答案
+// ============================================================
+function handleAnswer(selected, question, btnEl) {
+  if (state.answered) return;
+  state.answered = true;
+
+  const isCorrect = selected.en === question.en;
+  const allBtns = document.querySelectorAll(".option-btn");
+
+  // 标记正确/错误
+  allBtns.forEach(b => {
+    b.classList.add("disabled");
+    const optEn = b.innerHTML.match(/>(.+?)<\/button>/)?.[1] || "";
+    // 找到对应的 word 对象
+    const optWord = question.options.find(o => o.en === extractEnFromBtn(b));
+    if (optWord && optWord.en === question.en) {
+      b.classList.add("correct");
+    }
+    if (b === btnEl && !isCorrect) {
+      b.classList.add("wrong");
+    }
+  });
+
+  const toast = document.getElementById("feedback-toast");
+
+  if (isCorrect) {
+    state.score += 10;
+    document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
+    toast.textContent = "✅ 答对了！太棒了！";
+    toast.className = "feedback-toast correct";
+    toast.style.display = "block";
+    spawnConfetti();
+  } else {
+    toast.innerHTML = `❌ 不对哦～正确答案是：<strong>${question.en}</strong> ${question.emoji}`;
+    toast.className = "feedback-toast wrong";
+    toast.style.display = "block";
+  }
+
+  // 显示下一题按钮（最后一题显示"查看结果"）
+  const nextBtn = document.getElementById("next-btn");
+  nextBtn.style.display = "block";
+  if (state.currentIndex >= state.questions.length - 1) {
+    nextBtn.textContent = "查看结果 🏆";
+  } else {
+    nextBtn.textContent = "下一题 ➡️";
+  }
+}
+
+// 从按钮提取英文单词（辅助函数）
+function extractEnFromBtn(btn) {
+  // 按钮 innerHTML 格式：<span style="font-size:1.4rem">🚗</span><br>car
+  const match = btn.innerHTML.match(/<br>(.+)$/);
+  return match ? match[1].trim() : "";
+}
+
+// ============================================================
+//  下一题 / 查看结果
+// ============================================================
+function nextQuestion() {
+  if (state.currentIndex >= state.questions.length - 1) {
+    showResult();
+    return;
+  }
+  state.currentIndex++;
+  renderQuestion();
+}
+
+// ============================================================
+//  结果页
+// ============================================================
+function showResult() {
+  const total = state.questions.length;
+  const correctCount = state.score / 10;
+  const pct = Math.round((correctCount / total) * 100);
+
+  let emoji, title, titleClass, stars;
+
+  if (pct >= 90) {
+    emoji = "🏆"; title = "太厉害了！"; titleClass = "great";
+    stars = "⭐⭐⭐⭐⭐";
+  } else if (pct >= 70) {
+    emoji = "🎉"; title = "很棒哦！"; titleClass = "great";
+    stars = "⭐⭐⭐⭐☆";
+  } else if (pct >= 50) {
+    emoji = "😊"; title = "还不错！"; titleClass = "good";
+    stars = "⭐⭐⭐☆☆";
+  } else {
+    emoji = "💪"; title = "继续加油！"; titleClass = "try";
+    stars = "⭐⭐☆☆☆";
+  }
+
+  document.getElementById("result-emoji").textContent = emoji;
+  document.getElementById("result-title").textContent = title;
+  document.getElementById("result-title").className = "result-title " + titleClass;
+  document.getElementById("result-score").textContent = state.score + " 分";
+  document.getElementById("result-detail").textContent =
+    `答对 ${correctCount} / ${total} 题（正确率 ${pct}%）`;
+  document.getElementById("result-stars").textContent = stars;
+
+  document.getElementById("game-screen").style.display = "none";
+  document.getElementById("result-screen").style.display = "block";
+
+  if (pct >= 70) spawnConfetti();
+}
+
+function retryGame() {
+  startGame();
+}
+
+function goHome() {
+  document.getElementById("result-screen").style.display = "none";
+  document.getElementById("start-screen").style.display = "block";
+}
+
+function quitGame() {
+  if (confirm("确定要退出游戏吗？当前进度将丢失。")) {
+    goHome();
+  }
+}
+
+// ============================================================
+//  工具函数
+// ============================================================
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// 撒花特效
+function spawnConfetti() {
+  const colors = ["#FF6B6B","#4ECDC4","#FFE66D","#FF8ED4","#A78BFA","#60A5FA"];
+  for (let i = 0; i < 18; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = Math.random() * 100 + "vw";
+    piece.style.top = (60 + Math.random() * 20) + "vh";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = (Math.random() * 0.5) + "s";
+    piece.style.width = (8 + Math.random() * 8) + "px";
+    piece.style.height = piece.style.width;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 1600);
+  }
+}
+</script>
+
+</body>
+</html>
