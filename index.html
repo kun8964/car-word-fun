@@ -1,424 +1,709 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚗 Car Word Fun — 汽车英文学习游戏</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚗 Car Word Fun — 汽车英文学习游戏</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: 'Comic Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: linear-gradient(135deg, #FFF5E6 0%, #FFE0F0 50%, #E0F7FA 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow-x: hidden;
-    }
+        body {
+            font-family: 'Comic Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #FFF5E6 0%, #FFE0F0 50%, #E0F7FA 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 520px;
-      padding: 20px;
-    }
+        .container {
+            width: 100%;
+            max-width: 520px;
+            padding: 20px;
+        }
 
-    /* ========== 开始页 ========== */
-    #start-screen {
-      text-align: center;
-      animation: fadeIn 0.6s ease;
-    }
+        /* ========== 开始页 ========== */
+        #start-screen {
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+        .start-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #FF6B6B;
+            margin-bottom: 4px;
+            text-shadow: 2px 2px 0 rgba(255, 107, 107, 0.15);
+        }
+        .start-subtitle {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 18px;
+        }
+        .car-showcase {
+            font-size: 3.5rem;
+            margin: 10px 0 20px;
+            animation: bounce 2s infinite;
+        }
 
-    .start-title {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: #FF6B6B;
-      margin-bottom: 8px;
-      text-shadow: 2px 2px 0 rgba(255,107,107,0.15);
-    }
+        .section-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #bbb;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            margin-top: 4px;
+        }
 
-    .start-subtitle {
-      font-size: 1rem;
-      color: #888;
-      margin-bottom: 30px;
-    }
+        .type-select {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .type-btn {
+            padding: 12px 8px;
+            border: 3px solid #E8E8E8;
+            border-radius: 14px;
+            background: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .type-btn:hover {
+            border-color: #A78BFA;
+            background: #F5F0FF;
+            transform: scale(1.03);
+        }
+        .type-btn.active {
+            border-color: #7C3AED;
+            background: #EDE9FE;
+            color: #5B21B6;
+            box-shadow: 0 2px 12px rgba(124, 58, 237, 0.2);
+        }
+        .type-btn .type-icon {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+        }
 
-    .car-showcase {
-      font-size: 4rem;
-      margin: 20px 0 30px;
-      animation: bounce 2s infinite;
-    }
+        .mode-select {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            padding: 11px;
+            border: 3px solid #FFE66D;
+            border-radius: 14px;
+            background: white;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-btn:hover {
+            background: #FFE66D;
+            color: #333;
+            transform: scale(1.02);
+        }
+        .mode-btn.active {
+            background: #FFE66D;
+            border-color: #FFB800;
+            color: #333;
+        }
+        .mode-desc {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: -4px;
+            margin-bottom: 2px;
+            min-height: 16px;
+            text-align: center;
+        }
 
-    .mode-select {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 25px;
-    }
+        .highscore-hint {
+            font-size: 0.78rem;
+            color: #aaa;
+            margin-bottom: 14px;
+            min-height: 20px;
+            transition: all 0.3s;
+        }
+        .highscore-hint .hs-val {
+            color: #FF8E53;
+            font-weight: 700;
+        }
 
-    .mode-btn {
-      padding: 14px;
-      border: 3px solid #FFE66D;
-      border-radius: 16px;
-      background: white;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #555;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .mode-btn:hover { background: #FFE66D; color: #333; transform: scale(1.03); }
-    .mode-btn.active { background: #FFE66D; border-color: #FFB800; color: #333; }
+        .start-btn {
+            padding: 15px 55px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.35);
+            transition: all 0.25s;
+            letter-spacing: 2px;
+        }
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+        }
+        .start-btn:active {
+            transform: translateY(0);
+        }
 
-    .mode-desc {
-      font-size: 0.82rem;
-      color: #999;
-      margin-top: -6px;
-      margin-bottom: 4px;
-      min-height: 18px;
-    }
+        /* ========== 游戏页 ========== */
+        #game-screen {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .badge-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .score-badge {
+            background: linear-gradient(135deg, #4ECDC4, #44B09E);
+            color: white;
+            padding: 7px 15px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 12px rgba(78, 205, 196, 0.3);
+            white-space: nowrap;
+        }
+        .combo-badge {
+            display: none;
+            background: linear-gradient(135deg, #FF8E53, #FF6B6B);
+            color: white;
+            padding: 7px 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            animation: popIn 0.4s ease;
+            white-space: nowrap;
+        }
+        .combo-badge.show {
+            display: inline-block;
+        }
+        .progress-badge {
+            background: white;
+            color: #FF6B6B;
+            padding: 7px 15px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 2px solid #FFE0E0;
+            white-space: nowrap;
+        }
+        .mode-tag {
+            background: #F0F0F0;
+            color: #888;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .quit-btn {
+            background: none;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            padding: 5px 14px;
+            color: #999;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .quit-btn:hover {
+            border-color: #FF6B6B;
+            color: #FF6B6B;
+        }
 
-    .start-btn {
-      padding: 16px 60px;
-      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 1.3rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255,107,107,0.35);
-      transition: all 0.25s;
-      letter-spacing: 2px;
-    }
-    .start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,107,107,0.5); }
-    .start-btn:active { transform: translateY(0); }
+        .question-card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px 18px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 16px;
+            border: 3px solid #FFF0F0;
+            position: relative;
+            overflow: hidden;
+        }
+        .question-emoji {
+            font-size: 4.5rem;
+            margin-bottom: 8px;
+            display: block;
+            animation: popIn 0.5s ease;
+        }
+        .question-chinese {
+            font-size: 1.3rem;
+            color: #555;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+        .question-english {
+            font-size: 1.5rem;
+            color: #4ECDC4;
+            margin-bottom: 4px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .question-hint {
+            font-size: 0.85rem;
+            color: #bbb;
+            margin-bottom: 6px;
+            min-height: 20px;
+        }
 
-    /* ========== 游戏页 ========== */
-    #game-screen { display: none; animation: fadeIn 0.4s ease; }
+        /* 倒计时条 */
+        .timer-bar-wrap {
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 8px 0 4px;
+            overflow: hidden;
+            display: none;
+        }
+        .timer-bar-wrap.show {
+            display: block;
+        }
+        .timer-bar {
+            height: 100%;
+            border-radius: 10px;
+            background: #4ECDC4;
+            transition: width 0.3s linear, background 0.4s;
+        }
+        .timer-bar.warning {
+            background: #FFE66D;
+        }
+        .timer-bar.danger {
+            background: #FF6B6B;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
+        .feedback-toast {
+            display: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-top: 8px;
+            animation: slideUp 0.3s ease;
+        }
+        .feedback-toast.correct {
+            background: #D4EDDA;
+            color: #155724;
+            display: block;
+        }
+        .feedback-toast.wrong {
+            background: #F8D7DA;
+            color: #721C24;
+            display: block;
+        }
+        .feedback-toast.timeout {
+            background: #FFF3CD;
+            color: #856404;
+            display: block;
+        }
 
-    .score-badge {
-      background: linear-gradient(135deg, #4ECDC4, #44B09E);
-      color: white;
-      padding: 8px 18px;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 1rem;
-      box-shadow: 0 3px 12px rgba(78,205,196,0.3);
-    }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .option-btn {
+            padding: 16px 8px;
+            border: 3px solid #E8E8E8;
+            border-radius: 16px;
+            background: white;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #444;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+        .option-btn:hover:not(.disabled) {
+            border-color: #4ECDC4;
+            background: #F0FFFD;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            border-color: #4ECDC4;
+            background: #D4EDDA;
+            color: #155724;
+        }
+        .option-btn.wrong {
+            border-color: #FF6B6B;
+            background: #F8D7DA;
+            color: #721C24;
+        }
+        .option-btn.disabled {
+            cursor: default;
+            opacity: 0.55;
+        }
+        .option-btn .opt-emoji {
+            font-size: 1.3rem;
+            display: block;
+            margin-bottom: 2px;
+        }
 
-    .progress-badge {
-      background: white;
-      color: #FF6B6B;
-      padding: 8px 18px;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 1rem;
-      border: 2px solid #FFE0E0;
-    }
+        /* 拼写输入区 */
+        .spell-area {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+        .spell-area.show {
+            display: flex;
+        }
+        .spell-input {
+            width: 100%;
+            max-width: 320px;
+            padding: 14px 18px;
+            border: 3px solid #E8E8E8;
+            border-radius: 16px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Comic Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #444;
+            transition: all 0.2s;
+            outline: none;
+            background: #FAFAFA;
+        }
+        .spell-input:focus {
+            border-color: #A78BFA;
+            background: white;
+            box-shadow: 0 2px 15px rgba(167, 139, 250, 0.2);
+        }
+        .spell-input:disabled {
+            background: #f0f0f0;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .spell-submit {
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #A78BFA, #7C3AED);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        .spell-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+        }
+        .spell-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-    .quit-btn {
-      background: none;
-      border: 2px solid #ddd;
-      border-radius: 50px;
-      padding: 6px 16px;
-      color: #999;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .quit-btn:hover { border-color: #FF6B6B; color: #FF6B6B; }
+        .next-btn {
+            display: none;
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #4ECDC4, #44B09E);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
 
-    .question-card {
-      background: white;
-      border-radius: 24px;
-      padding: 30px 20px;
-      text-align: center;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-      border: 3px solid #FFF0F0;
-    }
+        /* ========== 结果页 ========== */
+        #result-screen {
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+        .result-card {
+            background: white;
+            border-radius: 28px;
+            padding: 30px 22px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 3px solid #FFE66D;
+        }
+        .result-emoji {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .result-title {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .result-title.great { color: #4ECDC4; }
+        .result-title.good { color: #FFB800; }
+        .result-title.try { color: #FF6B6B; }
+        .result-newrecord {
+            display: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #FF8E53;
+            background: #FFF5E6;
+            padding: 6px 16px;
+            border-radius: 50px;
+            margin-bottom: 10px;
+            animation: popIn 0.5s ease;
+        }
+        .result-newrecord.show { display: inline-block; }
+        .result-score {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #FF6B6B;
+            margin-bottom: 4px;
+        }
+        .result-detail {
+            font-size: 0.95rem;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .result-highscore {
+            font-size: 0.85rem;
+            color: #bbb;
+            margin-bottom: 18px;
+        }
+        .result-stars {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            letter-spacing: 6px;
+        }
+        .result-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-retry {
+            padding: 13px 28px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        .btn-home {
+            padding: 13px 28px;
+            background: white;
+            color: #888;
+            border: 3px solid #E8E8E8;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-home:hover {
+            border-color: #4ECDC4;
+            color: #4ECDC4;
+        }
 
-    .question-emoji {
-      font-size: 5rem;
-      margin-bottom: 12px;
-      display: block;
-      animation: popIn 0.5s ease;
-    }
+        /* ========== 动画 ========== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-90px) rotate(360deg); opacity: 0; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        .shake { animation: shake 0.5s ease; }
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: confetti 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 999;
+        }
 
-    .question-chinese {
-      font-size: 1.3rem;
-      color: #555;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }
-
-    .question-hint {
-      font-size: 0.9rem;
-      color: #bbb;
-      margin-bottom: 8px;
-    }
-
-    .feedback-toast {
-      display: none;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 1rem;
-      margin-top: 10px;
-      animation: slideUp 0.3s ease;
-    }
-    .feedback-toast.correct {
-      background: #D4EDDA;
-      color: #155724;
-      display: block;
-    }
-    .feedback-toast.wrong {
-      background: #F8D7DA;
-      color: #721C24;
-      display: block;
-    }
-
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .option-btn {
-      padding: 18px 10px;
-      border: 3px solid #E8E8E8;
-      border-radius: 16px;
-      background: white;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #444;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-    }
-    .option-btn:hover:not(.disabled) {
-      border-color: #4ECDC4;
-      background: #F0FFFD;
-      transform: translateY(-2px);
-    }
-    .option-btn.correct {
-      border-color: #4ECDC4;
-      background: #D4EDDA;
-      color: #155724;
-    }
-    .option-btn.wrong {
-      border-color: #FF6B6B;
-      background: #F8D7DA;
-      color: #721C24;
-    }
-    .option-btn.disabled { cursor: default; opacity: 0.6; }
-
-    .next-btn {
-      display: none;
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #4ECDC4, #44B09E);
-      color: white;
-      border: none;
-      border-radius: 16px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .next-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(78,205,196,0.4); }
-
-    /* ========== 结果页 ========== */
-    #result-screen { display: none; animation: fadeIn 0.6s ease; }
-
-    .result-card {
-      background: white;
-      border-radius: 28px;
-      padding: 35px 25px;
-      text-align: center;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-      border: 3px solid #FFE66D;
-    }
-
-    .result-emoji { font-size: 4.5rem; margin-bottom: 15px; display: block; }
-
-    .result-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    .result-title.great { color: #4ECDC4; }
-    .result-title.good { color: #FFB800; }
-    .result-title.try { color: #FF6B6B; }
-
-    .result-score {
-      font-size: 3.2rem;
-      font-weight: 700;
-      color: #FF6B6B;
-      margin-bottom: 5px;
-    }
-
-    .result-detail {
-      font-size: 1rem;
-      color: #999;
-      margin-bottom: 25px;
-    }
-
-    .result-stars {
-      font-size: 2.2rem;
-      margin-bottom: 25px;
-      letter-spacing: 8px;
-    }
-
-    .result-btns {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    .btn-retry {
-      padding: 14px 30px;
-      background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-retry:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,107,107,0.4); }
-
-    .btn-home {
-      padding: 14px 30px;
-      background: white;
-      color: #888;
-      border: 3px solid #E8E8E8;
-      border-radius: 50px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-home:hover { border-color: #4ECDC4; color: #4ECDC4; }
-
-    /* ========== 动画 ========== */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); }
-    }
-    @keyframes popIn {
-      0% { transform: scale(0.3); opacity: 0; }
-      70% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes confetti {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(-80px) rotate(360deg); opacity: 0; }
-    }
-
-    .confetti-piece {
-      position: fixed;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      animation: confetti 1s ease-out forwards;
-      pointer-events: none;
-    }
-
-    /* 响应式 */
-    @media (max-width: 400px) {
-      .start-title { font-size: 1.7rem; }
-      .question-emoji { font-size: 3.5rem; }
-      .option-btn { padding: 14px 8px; font-size: 1rem; }
-    }
-  </style>
+        /* 响应式 */
+        @media (max-width: 400px) {
+            .start-title { font-size: 1.6rem; }
+            .question-emoji { font-size: 3.2rem; }
+            .option-btn { padding: 13px 6px; font-size: 0.9rem; }
+            .type-btn { padding: 10px 6px; font-size: 0.8rem; }
+            .type-btn .type-icon { font-size: 1.2rem; }
+            .spell-input { font-size: 1rem; padding: 12px 14px; }
+            .result-score { font-size: 2.4rem; }
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- ====== 开始页 ====== -->
-  <div id="start-screen">
-    <div class="start-title">🚗 Car Word Fun</div>
-    <div class="start-subtitle">通过认识汽车，轻松学英文！</div>
-    <div class="car-showcase">🚗 🚌 🚒 🚜 🏎️</div>
+    <!-- ====== 开始页 ====== -->
+    <div id="start-screen">
+        <div class="start-title">🚗 Car Word Fun</div>
+        <div class="start-subtitle">通过认识汽车，轻松学英文！</div>
+        <div class="car-showcase" id="showcase-emoji">🚗 🚌 🚒 🚜 🏎️</div>
 
-    <div class="mode-select">
-      <button class="mode-btn active" data-mode="easy" onclick="selectMode('easy', this)">
-        🌱 基础模式（10题）
-      </button>
-      <div class="mode-desc" id="mode-desc-easy">适合刚开始学英文的小朋友</div>
+        <div class="section-label">🎮 游戏玩法</div>
+        <div class="type-select" id="type-select">
+            <button class="type-btn active" data-type="choose" onclick="selectGameType('choose', this)">
+                <span class="type-icon">🎯</span>选择英文
+            </button>
+            <button class="type-btn" data-type="reverse" onclick="selectGameType('reverse', this)">
+                <span class="type-icon">🔄</span>选择中文
+            </button>
+            <button class="type-btn" data-type="spell" onclick="selectGameType('spell', this)">
+                <span class="type-icon">✍️</span>拼写单词
+            </button>
+            <button class="type-btn" data-type="speed" onclick="selectGameType('speed', this)">
+                <span class="type-icon">⏱️</span>限时挑战
+            </button>
+        </div>
 
-      <button class="mode-btn" data-mode="normal" onclick="selectMode('normal', this)">
-        🌟 进阶模式（20题）
-      </button>
-      <div class="mode-desc" id="mode-desc-normal">已经认识一些汽车单词</div>
+        <div class="section-label">📚 难度选择</div>
+        <div class="mode-select" id="mode-select">
+            <button class="mode-btn active" data-mode="easy" onclick="selectMode('easy', this)">
+                🌱 基础模式（10题）
+            </button>
+            <div class="mode-desc">适合刚开始学英文的小朋友</div>
+            <button class="mode-btn" data-mode="normal" onclick="selectMode('normal', this)">
+                🌟 进阶模式（20题）
+            </button>
+            <div class="mode-desc">已经认识一些汽车单词</div>
+            <button class="mode-btn" data-mode="hard" onclick="selectMode('hard', this)">
+                🔥 挑战模式（25题）
+            </button>
+            <div class="mode-desc">汽车单词小达人来试试！</div>
+        </div>
 
-      <button class="mode-btn" data-mode="hard" onclick="selectMode('hard', this)">
-        🔥 挑战模式（25题）
-      </button>
-      <div class="mode-desc" id="mode-desc-hard">汽车单词小达人来试试！</div>
+        <div class="highscore-hint" id="highscore-hint"></div>
+
+        <button class="start-btn" onclick="startGame()">开始游戏 🎮</button>
     </div>
 
-    <button class="start-btn" onclick="startGame()">开始游戏 🎮</button>
-  </div>
+    <!-- ====== 游戏页 ====== -->
+    <div id="game-screen">
+        <div class="top-bar">
+            <div class="badge-row">
+                <div class="score-badge" id="score-badge">⭐ 0 分</div>
+                <div class="combo-badge" id="combo-badge">🔥 连击x3</div>
+            </div>
+            <span class="mode-tag" id="mode-tag">🎯 选择英文</span>
+            <button class="quit-btn" onclick="quitGame()">退出</button>
+            <div class="progress-badge" id="progress-badge">1 / 10</div>
+        </div>
 
-  <!-- ====== 游戏页 ====== -->
-  <div id="game-screen">
-    <div class="top-bar">
-      <div class="score-badge" id="score-badge">⭐ 0 分</div>
-      <button class="quit-btn" onclick="quitGame()">退出</button>
-      <div class="progress-badge" id="progress-badge">1 / 10</div>
+        <div class="question-card" id="question-card">
+            <span class="question-emoji" id="question-emoji">🚗</span>
+            <div class="question-chinese" id="question-chinese">汽车</div>
+            <div class="question-english" id="question-english" style="display:none;"></div>
+            <div class="question-hint" id="question-hint">选择正确的英文单词</div>
+            <div class="timer-bar-wrap" id="timer-bar-wrap">
+                <div class="timer-bar" id="timer-bar"></div>
+            </div>
+            <div class="feedback-toast" id="feedback-toast"></div>
+        </div>
+
+        <div class="options-grid" id="options-grid"></div>
+
+        <div class="spell-area" id="spell-area">
+            <input type="text" class="spell-input" id="spell-input" placeholder="输入英文单词..." autocomplete="off" autocapitalize="off" spellcheck="false">
+            <button class="spell-submit" id="spell-submit" onclick="submitSpell()">确认提交 ✅</button>
+        </div>
+
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一题 ➡️</button>
     </div>
 
-    <div class="question-card">
-      <span class="question-emoji" id="question-emoji">🚗</span>
-      <div class="question-chinese" id="question-chinese">汽车</div>
-      <div class="question-hint" id="question-hint">选择正确的英文单词</div>
-      <div class="feedback-toast" id="feedback-toast"></div>
+    <!-- ====== 结果页 ====== -->
+    <div id="result-screen">
+        <div class="result-card">
+            <span class="result-emoji" id="result-emoji">🎉</span>
+            <div class="result-newrecord" id="result-newrecord">🏆 新纪录！</div>
+            <div class="result-title" id="result-title">太棒了！</div>
+            <div class="result-score" id="result-score">80 分</div>
+            <div class="result-detail" id="result-detail">答对 8 / 10 题</div>
+            <div class="result-highscore" id="result-highscore"></div>
+            <div class="result-stars" id="result-stars">⭐⭐⭐⭐☆</div>
+            <div class="result-btns">
+                <button class="btn-retry" onclick="retryGame()">再玩一次 🔄</button>
+                <button class="btn-home" onclick="goHome()">返回首页 🏠</button>
+            </div>
+        </div>
     </div>
-
-    <div class="options-grid" id="options-grid">
-      <!-- JS 动态生成 -->
-    </div>
-
-    <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一题 ➡️</button>
-  </div>
-
-  <!-- ====== 结果页 ====== -->
-  <div id="result-screen">
-    <div class="result-card">
-      <span class="result-emoji" id="result-emoji">🎉</span>
-      <div class="result-title" id="result-title">太棒了！</div>
-      <div class="result-score" id="result-score">80 分</div>
-      <div class="result-detail" id="result-detail">答对 8 / 10 题</div>
-      <div class="result-stars" id="result-stars">⭐⭐⭐⭐☆</div>
-      <div class="result-btns">
-        <button class="btn-retry" onclick="retryGame()">再玩一次 🔄</button>
-        <button class="btn-home" onclick="goHome()">返回首页 🏠</button>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -427,272 +712,648 @@
 //  词库数据
 // ============================================================
 const WORD_BANK = {
-  easy: [
-    { en: "car",       zh: "汽车",     emoji: "🚗" },
-    { en: "bus",       zh: "公交车",   emoji: "🚌" },
-    { en: "truck",     zh: "卡车",     emoji: "🚚" },
-    { en: "taxi",      zh: "出租车",   emoji: "🚕" },
-    { en: "bike",      zh: "自行车",   emoji: "🚲" },
-    { en: "train",     zh: "火车",     emoji: "🚂" },
-    { en: "boat",      zh: "船",       emoji: "🚤" },
-    { en: "plane",     zh: "飞机",     emoji: "✈️" },
-    { en: "firetruck", zh: "消防车",   emoji: "🚒" },
-    { en: "police car",zh: "警车",     emoji: "🚓" },
-  ],
-  normal: [
-    { en: "ambulance",  zh: "救护车",   emoji: "🚑" },
-    { en: "motorcycle", zh: "摩托车",   emoji: "🏍️" },
-    { en: "helicopter", zh: "直升机",   emoji: "🚁" },
-    { en: "subway",     zh: "地铁",     emoji: "🚇" },
-    { en: "tractor",    zh: "拖拉机",   emoji: "🚜" },
-    { en: "crane",      zh: "起重机",   emoji: "🏗️" },
-    { en: "bulldozer",  zh: "推土机",   emoji: "🚜" },
-    { en: "excavator",  zh: "挖掘机",   emoji: "🚜" },
-    { en: "forklift",   zh: "叉车",     emoji: "🚚" },
-    { en: "van",        zh: "面包车",   emoji: "🚐" },
-  ],
-  hard: [
-    { en: "convertible", zh: "敞篷车",   emoji: "🏎️" },
-    { en: "limousine",   zh: "豪华轿车", emoji: "🚗" },
-    { en: "scooter",     zh: "小摩托车", emoji: "🛵" },
-    { en: "unicycle",    zh: "独轮车",   emoji: "🚲" },
-    { en: "skateboard",  zh: "滑板",     emoji: "🛹" },
-  ],
+    easy: [
+        { en: "car",       zh: "汽车",     emoji: "🚗" },
+        { en: "bus",       zh: "公交车",   emoji: "🚌" },
+        { en: "truck",     zh: "卡车",     emoji: "🚚" },
+        { en: "taxi",      zh: "出租车",   emoji: "🚕" },
+        { en: "bike",      zh: "自行车",   emoji: "🚲" },
+        { en: "train",     zh: "火车",     emoji: "🚂" },
+        { en: "boat",      zh: "船",       emoji: "🚤" },
+        { en: "plane",     zh: "飞机",     emoji: "✈️" },
+        { en: "firetruck", zh: "消防车",   emoji: "🚒" },
+        { en: "policecar", zh: "警车",     emoji: "🚓" },
+    ],
+    normal: [
+        { en: "ambulance",  zh: "救护车",   emoji: "🚑" },
+        { en: "motorcycle", zh: "摩托车",   emoji: "🏍️" },
+        { en: "helicopter", zh: "直升机",   emoji: "🚁" },
+        { en: "subway",     zh: "地铁",     emoji: "🚇" },
+        { en: "tractor",    zh: "拖拉机",   emoji: "🚜" },
+        { en: "crane",      zh: "起重机",   emoji: "🏗️" },
+        { en: "bulldozer",  zh: "推土机",   emoji: "🚜" },
+        { en: "excavator",  zh: "挖掘机",   emoji: "🚜" },
+        { en: "forklift",   zh: "叉车",     emoji: "🚚" },
+        { en: "van",        zh: "面包车",   emoji: "🚐" },
+    ],
+    hard: [
+        { en: "convertible", zh: "敞篷车",   emoji: "🏎️" },
+        { en: "limousine",   zh: "豪华轿车", emoji: "🚗" },
+        { en: "scooter",     zh: "小摩托车", emoji: "🛵" },
+        { en: "unicycle",    zh: "独轮车",   emoji: "🚲" },
+        { en: "skateboard",  zh: "滑板",     emoji: "🛹" },
+    ],
 };
 
-// 所有单词合并（用于随机错误选项）
 const ALL_WORDS = [...WORD_BANK.easy, ...WORD_BANK.normal, ...WORD_BANK.hard];
+
+const GAME_TYPE_META = {
+    choose:  { name: '🎯 选择英文',  hint: '选择正确的英文单词' },
+    reverse: { name: '🔄 选择中文',  hint: '选择正确的中文意思' },
+    spell:   { name: '✍️ 拼写单词',  hint: '输入正确的英文单词' },
+    speed:   { name: '⏱️ 限时挑战',  hint: '选择正确的英文单词（限时）' },
+};
 
 // ============================================================
 //  游戏状态
 // ============================================================
 let state = {
-  mode: "easy",
-  questions: [],    // 当前题目列表
-  currentIndex: 0,
-  score: 0,
-  answered: false,
+    gameType: "choose",
+    mode: "easy",
+    questions: [],
+    currentIndex: 0,
+    score: 0,
+    answered: false,
+    combo: 0,
+    maxCombo: 0,
+    timerInterval: null,
+    timerRemaining: 0,
+    timerTotal: 8,
 };
 
 // ============================================================
-//  模式选择
+//  开始页 - 选择逻辑
 // ============================================================
+function selectGameType(type, btnEl) {
+    state.gameType = type;
+    document.querySelectorAll("#type-select .type-btn").forEach(b => b.classList.remove("active"));
+    btnEl.classList.add("active");
+    updateShowcase();
+    updateHighscoreHint();
+}
+
 function selectMode(mode, btnEl) {
-  state.mode = mode;
-  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
-  btnEl.classList.add("active");
+    state.mode = mode;
+    document.querySelectorAll("#mode-select .mode-btn").forEach(b => b.classList.remove("active"));
+    btnEl.classList.add("active");
+    updateHighscoreHint();
+}
+
+function updateShowcase() {
+    const showcase = document.getElementById("showcase-emoji");
+    const map = {
+        choose:  '🚗 🚌 🚒 🚜 🏎️',
+        reverse: '🔤 ➡️ 🇬🇧 🚗 🚌',
+        spell:   '✍️ 🚗 ➡️ c _ _ _',
+        speed:   '⏱️ 🏎️ 💨 🚒 🔥',
+    };
+    showcase.textContent = map[state.gameType] || '🚗 🚌 🚒 🚜 🏎️';
+}
+
+function updateHighscoreHint() {
+    const hintEl = document.getElementById("highscore-hint");
+    const hs = getHighScore(state.gameType, state.mode);
+    if (hs > 0) {
+        hintEl.innerHTML = `🏆 历史最高分：<span class="hs-val">${hs} 分</span>`;
+    } else {
+        hintEl.innerHTML = '';
+    }
+}
+
+updateHighscoreHint();
+
+// ============================================================
+//  localStorage 最高分
+// ============================================================
+function getHighScore(gameType, mode) {
+    try {
+        return parseInt(localStorage.getItem(`cwf_hs_${gameType}_${mode}`)) || 0;
+    } catch (e) { return 0; }
+}
+
+function setHighScore(gameType, mode, score) {
+    try {
+        localStorage.setItem(`cwf_hs_${gameType}_${mode}`, score);
+    } catch (e) { /* 隐私模式等 */ }
 }
 
 // ============================================================
 //  开始游戏
 // ============================================================
 function startGame() {
-  const pool = getWordPool(state.mode);
-  state.questions = shuffleArray([...pool]).map(w => ({
-    ...w,
-    options: generateOptions(w, pool),
-  }));
-  state.currentIndex = 0;
-  state.score = 0;
-  state.answered = false;
+    const pool = getWordPool(state.mode);
+    const shuffled = shuffleArray([...pool]);
+    state.questions = shuffled.map(w => ({
+        ...w,
+        _currentOptions: null,
+    }));
+    state.currentIndex = 0;
+    state.score = 0;
+    state.answered = false;
+    state.combo = 0;
+    state.maxCombo = 0;
+    state.timerInterval = null;
+    state.timerRemaining = state.timerTotal;
 
-  document.getElementById("start-screen").style.display = "none";
-  document.getElementById("result-screen").style.display = "none";
-  document.getElementById("game-screen").style.display = "block";
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "none";
+    document.getElementById("game-screen").style.display = "block";
+    document.getElementById("mode-tag").textContent = GAME_TYPE_META[state.gameType].name;
+    document.getElementById("combo-badge").classList.remove("show");
 
-  renderQuestion();
+    renderQuestion();
 }
 
 function getWordPool(mode) {
-  if (mode === "easy")   return WORD_BANK.easy;
-  if (mode === "normal") return [...WORD_BANK.easy, ...WORD_BANK.normal];
-  return ALL_WORDS; // hard = 全部 25 题
+    if (mode === "easy")   return WORD_BANK.easy;
+    if (mode === "normal") return [...WORD_BANK.easy, ...WORD_BANK.normal];
+    return ALL_WORDS;
 }
 
-// 为每道题生成 4 个选项（1 正确 + 3 随机错误）
-function generateOptions(correctWord, pool) {
-  const wrongPool = pool.filter(w => w.en !== correctWord.en);
-  const wrongs = shuffleArray(wrongPool).slice(0, 3);
-  const options = shuffleArray([correctWord, ...wrongs]);
-  return options; // [{en, zh, emoji}]
+function generateEnOptions(correctWord, pool) {
+    const wrongPool = pool.filter(w => w.en !== correctWord.en);
+    const wrongs = shuffleArray(wrongPool).slice(0, 3);
+    return shuffleArray([correctWord, ...wrongs]);
+}
+
+function generateZhOptions(correctWord, pool) {
+    const wrongPool = pool.filter(w => w.zh !== correctWord.zh);
+    const wrongs = shuffleArray(wrongPool).slice(0, 3);
+    return shuffleArray([correctWord, ...wrongs]);
 }
 
 // ============================================================
 //  渲染题目
 // ============================================================
 function renderQuestion() {
-  const q = state.questions[state.currentIndex];
-  state.answered = false;
+    const q = state.questions[state.currentIndex];
+    const gt = state.gameType;
+    state.answered = false;
+    state.timerRemaining = state.timerTotal;
 
-  document.getElementById("question-emoji").textContent = q.emoji;
-  document.getElementById("question-chinese").textContent = q.zh;
-  document.getElementById("progress-badge").textContent =
-    `${state.currentIndex + 1} / ${state.questions.length}`;
-  document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
-  document.getElementById("feedback-toast").className = "feedback-toast";
-  document.getElementById("feedback-toast").style.display = "none";
-  document.getElementById("next-btn").style.display = "none";
+    clearTimer();
 
-  const grid = document.getElementById("options-grid");
-  grid.innerHTML = "";
+    document.getElementById("question-emoji").textContent = q.emoji;
+    document.getElementById("question-chinese").textContent = q.zh;
+    document.getElementById("question-english").textContent = q.en;
+    document.getElementById("progress-badge").textContent =
+        `${state.currentIndex + 1} / ${state.questions.length}`;
+    document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
+    document.getElementById("feedback-toast").className = "feedback-toast";
+    document.getElementById("feedback-toast").style.display = "none";
+    document.getElementById("next-btn").style.display = "none";
+    document.getElementById("question-hint").textContent = GAME_TYPE_META[gt].hint;
 
-  q.options.forEach((opt, i) => {
-    const btn = document.createElement("button");
-    btn.className = "option-btn";
-    btn.innerHTML = `<span style="font-size:1.4rem">${opt.emoji}</span><br>${opt.en}`;
-    btn.onclick = () => handleAnswer(opt, q, btn);
-    grid.appendChild(btn);
-  });
+    const questionEnglish = document.getElementById("question-english");
+    const optionsGrid = document.getElementById("options-grid");
+    const spellArea = document.getElementById("spell-area");
+    const timerWrap = document.getElementById("timer-bar-wrap");
+    const timerBar = document.getElementById("timer-bar");
+    const questionCard = document.getElementById("question-card");
+
+    optionsGrid.innerHTML = "";
+    optionsGrid.style.display = "none";
+    spellArea.classList.remove("show");
+    timerWrap.classList.remove("show");
+    timerBar.classList.remove("warning", "danger");
+    timerBar.style.width = "100%";
+    questionEnglish.style.display = "none";
+    questionCard.classList.remove("shake");
+
+    if (gt === "choose") {
+        questionEnglish.style.display = "none";
+        optionsGrid.style.display = "grid";
+        const opts = generateEnOptions(q, getWordPool(state.mode));
+        q._currentOptions = opts;
+        opts.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span>${opt.en}`;
+            btn.dataset.en = opt.en;
+            btn.onclick = () => handleAnswer(opt, q, btn);
+            optionsGrid.appendChild(btn);
+        });
+    } else if (gt === "reverse") {
+        questionEnglish.style.display = "block";
+        optionsGrid.style.display = "grid";
+        const opts = generateZhOptions(q, getWordPool(state.mode));
+        q._currentOptions = opts;
+        opts.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span>${opt.zh}`;
+            btn.dataset.zh = opt.zh;
+            btn.onclick = () => handleAnswerReverse(opt, q, btn);
+            optionsGrid.appendChild(btn);
+        });
+    } else if (gt === "spell") {
+        questionEnglish.style.display = "none";
+        spellArea.classList.add("show");
+        const input = document.getElementById("spell-input");
+        input.value = "";
+        input.disabled = false;
+        input.focus();
+        document.getElementById("spell-submit").disabled = false;
+        const letterHint = buildSpellHint(q.en);
+        document.getElementById("question-hint").textContent = `拼写单词 — ${letterHint}`;
+    } else if (gt === "speed") {
+        questionEnglish.style.display = "none";
+        optionsGrid.style.display = "grid";
+        timerWrap.classList.add("show");
+        timerBar.style.width = "100%";
+        timerBar.classList.remove("warning", "danger");
+        const opts = generateEnOptions(q, getWordPool(state.mode));
+        q._currentOptions = opts;
+        opts.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span>${opt.en}`;
+            btn.dataset.en = opt.en;
+            btn.onclick = () => handleAnswerSpeed(opt, q, btn);
+            optionsGrid.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    updateComboBadge();
+}
+
+function buildSpellHint(en) {
+    const parts = en.split(' ');
+    const hints = parts.map(p => {
+        return p[0] + ' _'.repeat(p.length - 1);
+    });
+    const totalLetters = en.replace(/\s/g, '').length;
+    let hint = hints.join('  ');
+    hint += `（${totalLetters}个字母`;
+    if (en.includes(' ')) hint += '，含空格';
+    hint += `，以 ${en[0]} 开头）`;
+    return hint;
 }
 
 // ============================================================
-//  处理答案
+//  处理答案 — choose / reverse / speed 模式
 // ============================================================
 function handleAnswer(selected, question, btnEl) {
-  if (state.answered) return;
-  state.answered = true;
-
-  const isCorrect = selected.en === question.en;
-  const allBtns = document.querySelectorAll(".option-btn");
-
-  // 标记正确/错误
-  allBtns.forEach(b => {
-    b.classList.add("disabled");
-    const optEn = b.innerHTML.match(/>(.+?)<\/button>/)?.[1] || "";
-    // 找到对应的 word 对象
-    const optWord = question.options.find(o => o.en === extractEnFromBtn(b));
-    if (optWord && optWord.en === question.en) {
-      b.classList.add("correct");
-    }
-    if (b === btnEl && !isCorrect) {
-      b.classList.add("wrong");
-    }
-  });
-
-  const toast = document.getElementById("feedback-toast");
-
-  if (isCorrect) {
-    state.score += 10;
-    document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
-    toast.textContent = "✅ 答对了！太棒了！";
-    toast.className = "feedback-toast correct";
-    toast.style.display = "block";
-    spawnConfetti();
-  } else {
-    toast.innerHTML = `❌ 不对哦～正确答案是：<strong>${question.en}</strong> ${question.emoji}`;
-    toast.className = "feedback-toast wrong";
-    toast.style.display = "block";
-  }
-
-  // 显示下一题按钮（最后一题显示"查看结果"）
-  const nextBtn = document.getElementById("next-btn");
-  nextBtn.style.display = "block";
-  if (state.currentIndex >= state.questions.length - 1) {
-    nextBtn.textContent = "查看结果 🏆";
-  } else {
-    nextBtn.textContent = "下一题 ➡️";
-  }
+    if (state.answered) return;
+    state.answered = true;
+    const isCorrect = selected.en === question.en;
+    processChooseResult(isCorrect, question, btnEl, selected.en);
 }
 
-// 从按钮提取英文单词（辅助函数）
-function extractEnFromBtn(btn) {
-  // 按钮 innerHTML 格式：<span style="font-size:1.4rem">🚗</span><br>car
-  const match = btn.innerHTML.match(/<br>(.+)$/);
-  return match ? match[1].trim() : "";
+function handleAnswerReverse(selected, question, btnEl) {
+    if (state.answered) return;
+    state.answered = true;
+    const isCorrect = selected.zh === question.zh;
+    processChooseResult(isCorrect, question, btnEl, selected.zh, true);
+}
+
+function handleAnswerSpeed(selected, question, btnEl) {
+    if (state.answered) return;
+    state.answered = true;
+    clearTimer();
+    const isCorrect = selected.en === question.en;
+    const timeBonus = isCorrect ? calcTimeBonus() : 0;
+    processChooseResult(isCorrect, question, btnEl, selected.en, false, timeBonus);
+}
+
+function processChooseResult(isCorrect, question, btnEl, answerText, isReverse = false, timeBonus = 0) {
+    const allBtns = document.querySelectorAll("#options-grid .option-btn");
+    const gt = state.gameType;
+
+    allBtns.forEach(b => {
+        b.classList.add("disabled");
+        const matchKey = isReverse ? 'zh' : 'en';
+        const correctVal = isReverse ? question.zh : question.en;
+        if (b.dataset[matchKey] === correctVal) {
+            b.classList.add("correct");
+        }
+        if (b === btnEl && !isCorrect) {
+            b.classList.add("wrong");
+        }
+    });
+
+    const toast = document.getElementById("feedback-toast");
+    const questionCard = document.getElementById("question-card");
+
+    if (isCorrect) {
+        state.combo++;
+        if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+        const comboBonus = Math.max(0, state.combo - 1);
+        const basePoints = gt === "speed" ? 10 : 10;
+        const totalPoints = basePoints + comboBonus + timeBonus;
+        state.score += totalPoints;
+
+        let msg = "✅ 答对了！";
+        if (state.combo >= 7) msg = `💥 完美连击x${state.combo}！+${totalPoints}分`;
+        else if (state.combo >= 5) msg = `⚡ 超级连击x${state.combo}！+${totalPoints}分`;
+        else if (state.combo >= 3) msg = `🔥 连击x${state.combo}！+${totalPoints}分`;
+        else if (timeBonus > 0) msg = `✅ 答对了！+${basePoints}分 ⏱️+${timeBonus}分`;
+        else msg = `✅ 答对了！+${totalPoints}分`;
+
+        toast.textContent = msg;
+        toast.className = "feedback-toast correct";
+        toast.style.display = "block";
+        spawnConfetti();
+    } else {
+        state.combo = 0;
+        const correctDisplay = isReverse ? question.zh : question.en;
+        const correctEmoji = question.emoji;
+        toast.innerHTML = `❌ 不对哦～正确答案是：<strong>${correctDisplay}</strong> ${correctEmoji}`;
+        toast.className = "feedback-toast wrong";
+        toast.style.display = "block";
+        questionCard.classList.add("shake");
+        setTimeout(() => questionCard.classList.remove("shake"), 500);
+    }
+
+    document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
+    updateComboBadge();
+
+    const nextBtn = document.getElementById("next-btn");
+    nextBtn.style.display = "block";
+    if (state.currentIndex >= state.questions.length - 1) {
+        nextBtn.textContent = "查看结果 🏆";
+    } else {
+        nextBtn.textContent = "下一题 ➡️";
+    }
+
+    if (state.gameType === "spell") {
+        document.getElementById("spell-input").disabled = true;
+        document.getElementById("spell-submit").disabled = true;
+    }
+}
+
+function calcTimeBonus() {
+    const pct = state.timerRemaining / state.timerTotal;
+    if (pct > 0.6) return 5;
+    if (pct > 0.3) return 3;
+    if (pct > 0) return 1;
+    return 0;
+}
+
+function updateComboBadge() {
+    const badge = document.getElementById("combo-badge");
+    if (state.combo >= 3) {
+        badge.textContent = state.combo >= 7 ?
+            `💥 连击x${state.combo}` :
+            state.combo >= 5 ?
+            `⚡ 连击x${state.combo}` :
+            `🔥 连击x${state.combo}`;
+        badge.classList.add("show");
+    } else {
+        badge.classList.remove("show");
+    }
+}
+
+// ============================================================
+//  拼写模式提交
+// ============================================================
+function submitSpell() {
+    if (state.answered) return;
+    const q = state.questions[state.currentIndex];
+    const input = document.getElementById("spell-input");
+    const userAnswer = input.value.trim();
+    if (!userAnswer) return;
+
+    state.answered = true;
+    const isCorrect = checkSpellAnswer(userAnswer, q.en);
+
+    if (isCorrect) {
+        state.combo++;
+        if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+        const comboBonus = Math.max(0, state.combo - 1);
+        const totalPoints = 15 + comboBonus;
+        state.score += totalPoints;
+
+        const toast = document.getElementById("feedback-toast");
+        let msg = "✅ 拼写正确！";
+        if (state.combo >= 7) msg = `💥 完美连击x${state.combo}！+${totalPoints}分`;
+        else if (state.combo >= 5) msg = `⚡ 超级连击x${state.combo}！+${totalPoints}分`;
+        else if (state.combo >= 3) msg = `🔥 连击x${state.combo}！+${totalPoints}分`;
+        else msg = `✅ 拼写正确！+${totalPoints}分`;
+        toast.textContent = msg;
+        toast.className = "feedback-toast correct";
+        toast.style.display = "block";
+        spawnConfetti();
+    } else {
+        state.combo = 0;
+        const toast = document.getElementById("feedback-toast");
+        toast.innerHTML = `❌ 不对哦～正确答案是：<strong>${q.en}</strong> ${q.emoji}`;
+        toast.className = "feedback-toast wrong";
+        toast.style.display = "block";
+        document.getElementById("question-card").classList.add("shake");
+        setTimeout(() => document.getElementById("question-card").classList.remove("shake"), 500);
+    }
+
+    document.getElementById("score-badge").textContent = `⭐ ${state.score} 分`;
+    updateComboBadge();
+    document.getElementById("spell-input").disabled = true;
+    document.getElementById("spell-submit").disabled = true;
+
+    const nextBtn = document.getElementById("next-btn");
+    nextBtn.style.display = "block";
+    if (state.currentIndex >= state.questions.length - 1) {
+        nextBtn.textContent = "查看结果 🏆";
+    } else {
+        nextBtn.textContent = "下一题 ➡️";
+    }
+}
+
+function checkSpellAnswer(userInput, correctAnswer) {
+    const normalized = userInput.toLowerCase().replace(/\s+/g, ' ').trim();
+    const correct = correctAnswer.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (normalized === correct) return true;
+    if (normalized.replace(/\s/g, '') === correct.replace(/\s/g, '')) return true;
+    return false;
+}
+
+// 回车键提交拼写
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' &&
+        state.gameType === 'spell' &&
+        !state.answered &&
+        document.getElementById("game-screen").style.display === "block") {
+        e.preventDefault();
+        submitSpell();
+    }
+});
+
+// ============================================================
+//  计时器（speed模式）
+// ============================================================
+function startTimer() {
+    clearTimer();
+    state.timerRemaining = state.timerTotal;
+    updateTimerBar();
+
+    state.timerInterval = setInterval(() => {
+        state.timerRemaining -= 0.1;
+        if (state.timerRemaining <= 0) {
+            state.timerRemaining = 0;
+            updateTimerBar();
+            handleTimeout();
+        } else {
+            updateTimerBar();
+        }
+    }, 100);
+}
+
+function updateTimerBar() {
+    const bar = document.getElementById("timer-bar");
+    const pct = (state.timerRemaining / state.timerTotal) * 100;
+    bar.style.width = pct + "%";
+    bar.classList.remove("warning", "danger");
+    if (state.timerRemaining <= state.timerTotal * 0.3) {
+        bar.classList.add("danger");
+    } else if (state.timerRemaining <= state.timerTotal * 0.55) {
+        bar.classList.add("warning");
+    }
+}
+
+function handleTimeout() {
+    if (state.answered) return;
+    state.answered = true;
+    clearTimer();
+    state.combo = 0;
+    updateComboBadge();
+
+    const q = state.questions[state.currentIndex];
+    const toast = document.getElementById("feedback-toast");
+    toast.innerHTML = `⏰ 时间到！正确答案是：<strong>${q.en}</strong> ${q.emoji}`;
+    toast.className = "feedback-toast timeout";
+    toast.style.display = "block";
+
+    const allBtns = document.querySelectorAll("#options-grid .option-btn");
+    allBtns.forEach(b => {
+        b.classList.add("disabled");
+        if (b.dataset.en === q.en) b.classList.add("correct");
+    });
+
+    const nextBtn = document.getElementById("next-btn");
+    nextBtn.style.display = "block";
+    if (state.currentIndex >= state.questions.length - 1) {
+        nextBtn.textContent = "查看结果 🏆";
+    } else {
+        nextBtn.textContent = "下一题 ➡️";
+    }
+}
+
+function clearTimer() {
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
 }
 
 // ============================================================
 //  下一题 / 查看结果
 // ============================================================
 function nextQuestion() {
-  if (state.currentIndex >= state.questions.length - 1) {
-    showResult();
-    return;
-  }
-  state.currentIndex++;
-  renderQuestion();
+    clearTimer();
+    if (state.currentIndex >= state.questions.length - 1) {
+        showResult();
+        return;
+    }
+    state.currentIndex++;
+    renderQuestion();
 }
 
 // ============================================================
 //  结果页
 // ============================================================
 function showResult() {
-  const total = state.questions.length;
-  const correctCount = state.score / 10;
-  const pct = Math.round((correctCount / total) * 100);
+    clearTimer();
+    const total = state.questions.length;
 
-  let emoji, title, titleClass, stars;
+    // 用 score 反推正确率（选择题每题约10分，拼写每题约15分）
+    let estimatedCorrect;
+    if (state.gameType === "spell") {
+        estimatedCorrect = Math.round(state.score / 15);
+    } else {
+        estimatedCorrect = Math.round(state.score / 10);
+    }
+    estimatedCorrect = Math.min(estimatedCorrect, total);
+    const pct = total > 0 ? Math.round((estimatedCorrect / total) * 100) : 0;
+    const clampedPct = Math.min(100, Math.max(0, pct));
 
-  if (pct >= 90) {
-    emoji = "🏆"; title = "太厉害了！"; titleClass = "great";
-    stars = "⭐⭐⭐⭐⭐";
-  } else if (pct >= 70) {
-    emoji = "🎉"; title = "很棒哦！"; titleClass = "great";
-    stars = "⭐⭐⭐⭐☆";
-  } else if (pct >= 50) {
-    emoji = "😊"; title = "还不错！"; titleClass = "good";
-    stars = "⭐⭐⭐☆☆";
-  } else {
-    emoji = "💪"; title = "继续加油！"; titleClass = "try";
-    stars = "⭐⭐☆☆☆";
-  }
+    let emoji, title, titleClass, stars;
+    if (clampedPct >= 90) {
+        emoji = "🏆"; title = "太厉害了！"; titleClass = "great";
+        stars = "⭐⭐⭐⭐⭐";
+    } else if (clampedPct >= 70) {
+        emoji = "🎉"; title = "很棒哦！"; titleClass = "great";
+        stars = "⭐⭐⭐⭐☆";
+    } else if (clampedPct >= 50) {
+        emoji = "😊"; title = "还不错！"; titleClass = "good";
+        stars = "⭐⭐⭐☆☆";
+    } else {
+        emoji = "💪"; title = "继续加油！"; titleClass = "try";
+        stars = "⭐⭐☆☆☆";
+    }
 
-  document.getElementById("result-emoji").textContent = emoji;
-  document.getElementById("result-title").textContent = title;
-  document.getElementById("result-title").className = "result-title " + titleClass;
-  document.getElementById("result-score").textContent = state.score + " 分";
-  document.getElementById("result-detail").textContent =
-    `答对 ${correctCount} / ${total} 题（正确率 ${pct}%）`;
-  document.getElementById("result-stars").textContent = stars;
+    document.getElementById("result-emoji").textContent = emoji;
+    document.getElementById("result-title").textContent = title;
+    document.getElementById("result-title").className = "result-title " + titleClass;
+    document.getElementById("result-score").textContent = state.score + " 分";
+    document.getElementById("result-detail").textContent =
+        `共 ${total} 题 | 最大连击：${state.maxCombo}次`;
+    document.getElementById("result-stars").textContent = stars;
 
-  document.getElementById("game-screen").style.display = "none";
-  document.getElementById("result-screen").style.display = "block";
+    const prevHS = getHighScore(state.gameType, state.mode);
+    const newRecordEl = document.getElementById("result-newrecord");
+    const hsEl = document.getElementById("result-highscore");
+    if (state.score > prevHS) {
+        setHighScore(state.gameType, state.mode, state.score);
+        newRecordEl.classList.add("show");
+        hsEl.textContent = `🏆 新纪录！之前最高：${prevHS} 分`;
+    } else {
+        newRecordEl.classList.remove("show");
+        hsEl.textContent = `历史最高：${prevHS} 分`;
+    }
 
-  if (pct >= 70) spawnConfetti();
+    document.getElementById("game-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+
+    if (clampedPct >= 70) spawnConfetti();
 }
 
 function retryGame() {
-  startGame();
+    clearTimer();
+    startGame();
 }
 
 function goHome() {
-  document.getElementById("result-screen").style.display = "none";
-  document.getElementById("start-screen").style.display = "block";
+    clearTimer();
+    document.getElementById("result-screen").style.display = "none";
+    document.getElementById("game-screen").style.display = "none";
+    document.getElementById("start-screen").style.display = "block";
+    updateHighscoreHint();
 }
 
 function quitGame() {
-  if (confirm("确定要退出游戏吗？当前进度将丢失。")) {
-    goHome();
-  }
+    if (confirm("确定要退出游戏吗？当前进度将丢失。")) {
+        clearTimer();
+        goHome();
+    }
 }
 
 // ============================================================
 //  工具函数
 // ============================================================
 function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
 
-// 撒花特效
 function spawnConfetti() {
-  const colors = ["#FF6B6B","#4ECDC4","#FFE66D","#FF8ED4","#A78BFA","#60A5FA"];
-  for (let i = 0; i < 18; i++) {
-    const piece = document.createElement("div");
-    piece.className = "confetti-piece";
-    piece.style.left = Math.random() * 100 + "vw";
-    piece.style.top = (60 + Math.random() * 20) + "vh";
-    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.animationDelay = (Math.random() * 0.5) + "s";
-    piece.style.width = (8 + Math.random() * 8) + "px";
-    piece.style.height = piece.style.width;
-    document.body.appendChild(piece);
-    setTimeout(() => piece.remove(), 1600);
-  }
+    const colors = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#FF8ED4", "#A78BFA", "#60A5FA"];
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.top = (55 + Math.random() * 25) + "vh";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 0.5) + "s";
+        piece.style.width = (7 + Math.random() * 9) + "px";
+        piece.style.height = piece.style.width;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 1700);
+    }
 }
 </script>
 
