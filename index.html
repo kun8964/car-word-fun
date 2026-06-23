@@ -3,210 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="车车大联盟单页游戏中心，融合车模视频、词汇练习、观察任务和儿童创意表达。">
-  <title>车车大联盟 | 单页游戏中心</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%232279f2'/%3E%3Cpath d='M14 38h36c2 0 4-2 4-4v-7c0-2-1-3-3-4l-7-3-6-8c-1-1-2-2-4-2H22c-2 0-3 1-4 2l-6 9-4 2c-2 1-3 3-3 5v6c0 2 2 4 4 4h5z' fill='white'/%3E%3Ccircle cx='20' cy='40' r='6' fill='%23121828'/%3E%3Ccircle cx='46' cy='40' r='6' fill='%23121828'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bricolage+Grotesque:wght@500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <meta name="description" content="Vehicle Card Collection + Math Learning，面向儿童的车辆卡牌收集与数字学习网页游戏。">
+  <title>Vehicle Card Collection | 车车卡牌数学游戏</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%234da3ff'/%3E%3Cpath d='M13 39h38c2 0 4-2 4-4v-7c0-2-1-3-3-4l-8-3-5-7c-1-1-2-2-4-2H24c-2 0-3 1-4 2l-5 8-5 2c-2 1-3 3-3 5v6c0 2 2 4 4 4h2z' fill='white'/%3E%3Ccircle cx='21' cy='41' r='6' fill='%23172033'/%3E%3Ccircle cx='45' cy='41' r='6' fill='%23172033'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <header class="topbar" aria-label="主导航">
-    <a class="brand" href="#panel-0" aria-label="回到首页">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32" role="img" aria-label="车车大联盟标志">
-          <path d="M7 20.5h18.5c1.4 0 2.5-1.1 2.5-2.5v-3.2c0-.9-.5-1.7-1.3-2.1l-3.7-1.9-3.3-4.1c-.5-.6-1.2-.9-1.9-.9h-7.4c-.8 0-1.6.4-2.1 1.1l-3 4.2-2.1.8C2.7 12.3 2 13.3 2 14.4V18c0 1.4 1.1 2.5 2.5 2.5H7Z" fill="currentColor"/>
-          <circle cx="9.2" cy="21" r="3" fill="#fff"/>
-          <circle cx="23" cy="21" r="3" fill="#fff"/>
-        </svg>
-      </span>
-      <span>
-        <strong>车车大联盟</strong>
-        <small>Creative Lab</small>
-      </span>
-    </a>
-    <nav class="nav-links" aria-label="页面章节">
-      <a href="#panel-0">首页</a>
-      <a href="#panel-1">游戏</a>
-      <a href="#panel-2">玩法</a>
-      <a href="#panel-3">作品</a>
-    </nav>
-    <a class="nav-action" href="#panel-1">选择游戏<span aria-hidden="true">→</span></a>
-  </header>
+  <div class="app-shell">
+    <header class="topbar" aria-label="主导航">
+      <button class="brand-button" type="button" data-screen-target="home" aria-label="回到首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img" aria-label="车车大联盟标志">
+            <path d="M5 20h22c1.3 0 2.4-1.1 2.4-2.4v-3.1c0-.9-.5-1.7-1.3-2.1l-4.3-2-3.2-4.2c-.5-.6-1.2-.9-2-.9h-7.2c-.8 0-1.6.4-2 1.1l-3 4.3-2.3 1C3 12.2 2.4 13.2 2.4 14.4v3.2C2.4 18.9 3.7 20 5 20Z" fill="currentColor"/>
+            <circle cx="9.5" cy="21" r="3" fill="#fff"/>
+            <circle cx="23" cy="21" r="3" fill="#fff"/>
+          </svg>
+        </span>
+        <span>
+          <strong>车车卡牌</strong>
+          <small>Math Garage</small>
+        </span>
+      </button>
 
-  <aside class="section-rail" aria-label="屏幕进度导航">
-    <button class="rail-dot is-active" type="button" data-target="0"><span>01</span></button>
-    <button class="rail-dot" type="button" data-target="1"><span>02</span></button>
-    <button class="rail-dot" type="button" data-target="2"><span>03</span></button>
-    <button class="rail-dot" type="button" data-target="3"><span>04</span></button>
-  </aside>
+      <nav class="nav-tabs" aria-label="游戏场景">
+        <button class="nav-tab is-active" type="button" data-screen-target="home">首页</button>
+        <button class="nav-tab" type="button" data-screen-target="map">探索</button>
+        <button class="nav-tab" type="button" data-screen-target="play">任务</button>
+        <button class="nav-tab" type="button" data-screen-target="garage">车库</button>
+      </nav>
 
-  <main class="fullpage" id="fullpage">
-    <section class="panel panel-hero is-active" id="panel-0" data-index="0">
-      <div class="ambient ambient-a" aria-hidden="true"></div>
-      <div class="ambient ambient-b" aria-hidden="true"></div>
-      <div class="panel-inner hero-grid">
-        <div class="copy-block">
-          <p class="eyebrow">Creative car learning lab</p>
-          <h1>玩小车<br>造大想法</h1>
-          <p class="lede">把真实车模动画、词汇练习和观察任务放进同一个单页游戏中心。孩子不是看宣传，而是在一次次观看、配对、排序、讲述中完成小挑战。</p>
-          <div class="actions">
-            <a class="primary-cta" href="#panel-1">选择游戏<span aria-hidden="true">→</span></a>
-            <a class="ghost-cta" href="#panel-2">看玩法规则</a>
-          </div>
-          <p class="scope-note">单页体验 · 无账号 · 当前页完成</p>
-        </div>
-
-        <div class="video-stage hero-video" data-depth="0.22">
-          <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/red-racer.jpg">
-            <source src="./assets/videos/red-racer.mp4" type="video/mp4">
-          </video>
-        </div>
+      <div class="player-stats" aria-label="当前收集进度">
+        <span><b id="star-count">0</b><small>Stars</small></span>
+        <span><b id="card-count">3</b><small>Cards</small></span>
       </div>
-    </section>
+    </header>
 
-    <section class="panel panel-course" id="panel-1" data-index="1">
-      <div class="panel-inner course-grid">
-        <div class="course-copy">
-          <p class="eyebrow">Game modes</p>
-          <h2>先玩哪一个？</h2>
-          <p class="lede">当前版本先明确 4 个单人小游戏方向。每个游戏只围绕一个小目标，适合孩子在当前页面里快速理解、尝试和重复练习。</p>
-          <div class="feature-list">
-            <button class="game-card is-selected" type="button" data-game="word" aria-pressed="true">
-              <span class="feature-icon" aria-hidden="true">词</span>
-              <div>
-                <h3>车车找词</h3>
-                <p>看车模画面，选择正确的中文或英文词卡。</p>
-              </div>
-              <b>01</b>
-            </button>
-            <button class="game-card" type="button" data-game="parts" aria-pressed="false">
-              <span class="feature-icon" aria-hidden="true">配</span>
-              <div>
-                <h3>零件配对</h3>
-                <p>把轮胎、车灯、车门等部件和名称配起来。</p>
-              </div>
-              <b>02</b>
-            </button>
-            <button class="game-card" type="button" data-game="route" aria-pressed="false">
-              <span class="feature-icon" aria-hidden="true">序</span>
-              <div>
-                <h3>路线排序</h3>
-                <p>按启动、转弯、加速、停车，把动作顺序排对。</p>
-              </div>
-              <b>03</b>
-            </button>
-            <button class="game-card" type="button" data-game="speaker" aria-pressed="false">
-              <span class="feature-icon" aria-hidden="true">讲</span>
-              <div>
-                <h3>小小讲解员</h3>
-                <p>用给定词卡讲一句作品说明，练观察和表达。</p>
-              </div>
-              <b>04</b>
-            </button>
+    <main class="screen-stack">
+      <section class="screen is-active" id="screen-home" data-screen="home" aria-labelledby="home-title">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Vehicle Card Collection + Math Learning</p>
+            <h1 id="home-title">找车，数数，收集卡牌</h1>
+            <p class="hero-text">把车辆图片变成可收集卡牌。孩子在城市、赛车场、工地和机场里寻找车辆，完成简单数字任务，再把新卡片放进自己的车库。</p>
+            <div class="hero-actions">
+              <button class="primary-btn" type="button" data-screen-target="map">开始探索</button>
+              <button class="soft-btn" type="button" data-screen-target="garage">我的车库</button>
+              <button class="plain-btn" type="button" data-parent-open>家长说明</button>
+            </div>
+            <div class="daily-card">
+              <span class="tiny-label">今日任务</span>
+              <strong>Find 3 race cars</strong>
+              <p>找到 3 辆赛车，完成一道加法题，解锁一张新卡。</p>
+            </div>
+          </div>
+
+          <div class="hero-card-stage" aria-label="车辆卡牌预览">
+            <article class="toy-card hero-card hero-card-a">
+              <span class="rarity rarity-rare">Rare III</span>
+              <img src="./assets/vehicles/redbull-rb7.png" alt="Red Bull RB7 race car">
+              <h2>Red Bull RB7</h2>
+              <p>红牛赛车</p>
+            </article>
+            <article class="toy-card hero-card hero-card-b">
+              <span class="rarity rarity-common">Common I</span>
+              <img src="./assets/vehicles/audi-a4.png" alt="Audi A4 city car">
+              <h2>Audi A4</h2>
+              <p>城市轿车</p>
+            </article>
+            <article class="toy-card hero-card hero-card-c">
+              <span class="rarity rarity-nice">Nice II</span>
+              <img src="./assets/vehicles/excavator.png" alt="Excavator construction vehicle">
+              <h2>Excavator</h2>
+              <p>挖掘机</p>
+            </article>
           </div>
         </div>
+      </section>
 
-        <div class="game-playground" data-depth="0.16">
-          <aside class="game-preview" aria-live="polite">
-            <p class="preview-label">当前玩法</p>
-            <h3 id="game-preview-title">车车找词</h3>
-            <p id="game-preview-desc">看车模画面，选择正确的中文或英文词卡。</p>
-            <div class="game-chips" id="game-preview-chips" aria-label="示例选项">
-              <button type="button">wheel</button>
-              <button type="button">car</button>
-              <button type="button">road</button>
+      <section class="screen" id="screen-map" data-screen="map" aria-labelledby="map-title">
+        <div class="section-heading">
+          <p class="eyebrow">Explore map</p>
+          <h2 id="map-title">选择一个地方找车</h2>
+          <p>每个区域都有不同类型的车辆。先从赛车场开始，完成第一张新卡收集。</p>
+        </div>
+        <div class="map-grid" id="map-grid" aria-label="探索区域"></div>
+      </section>
+
+      <section class="screen" id="screen-play" data-screen="play" aria-labelledby="play-title">
+        <div class="play-layout">
+          <aside class="mission-panel">
+            <p class="eyebrow">Current mission</p>
+            <h2 id="play-title">Find 3 race cars</h2>
+            <p id="mission-copy">点击画面中的赛车。找到 3 辆后，会出现一个数字题。</p>
+            <div class="progress-wrap">
+              <div class="progress-top">
+                <span id="mission-count">0 / 3 found</span>
+                <span id="mission-area">Race Track</span>
+              </div>
+              <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
             </div>
-            <button class="mini-play" type="button" data-start-game="word">开始这一局</button>
-            <p class="game-feedback" id="game-feedback">已选择：车车找词。点击模式可切换玩法。</p>
+            <div class="feedback-card" id="feedback-card" aria-live="polite">
+              <strong>Ready</strong>
+              <p>Try tapping a race car.</p>
+            </div>
+            <button class="soft-btn wide" type="button" data-reset-mission>重新开始这一局</button>
           </aside>
-          <div class="video-stage framed-video">
-            <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/black-racer.jpg">
-              <source src="./assets/videos/black-racer.mp4" type="video/mp4">
-            </video>
+
+          <div class="play-scene">
+            <div class="scene-toolbar">
+              <span class="pill">Look</span>
+              <span class="pill">Tap</span>
+              <span class="pill">Count</span>
+            </div>
+            <div class="vehicle-field" id="vehicle-field" aria-label="找车区域"></div>
+            <div class="math-panel is-hidden" id="math-panel" aria-live="polite">
+              <p class="tiny-label">Math time</p>
+              <h3 id="math-question">You found 3 race cars. Add 2 more. How many cars now?</h3>
+              <div class="answer-row" id="answer-row"></div>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="panel panel-lab" id="panel-2" data-index="2">
-      <div class="panel-inner lab-grid">
-        <div class="lab-label">
-          <span>03</span>
-          <p>车车实验室</p>
-        </div>
-        <div class="video-stage lab-video" data-depth="0.28">
-          <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/white-truck.jpg">
-            <source src="./assets/videos/white-truck.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="lab-copy">
-          <p class="eyebrow">Single page play</p>
-          <h2>每局只做<br>一个小任务</h2>
-          <p>所有游戏都在当前页完成，不登录、不跳二级页面。每局先看一段车车视频，再进入找词、配对、排序或讲述挑战。</p>
-          <div class="mini-metrics">
-            <span><strong>4</strong><small>个游戏模式</small></span>
-            <span><strong>0</strong><small>登录步骤</small></span>
+      <section class="screen" id="screen-garage" data-screen="garage" aria-labelledby="garage-title">
+        <div class="garage-head">
+          <div>
+            <p class="eyebrow">My garage</p>
+            <h2 id="garage-title">我的车库</h2>
+            <p>查看已经收集的车辆卡片，也可以点未解锁剪影看看线索。</p>
           </div>
+          <div class="filter-row" id="filter-row" aria-label="车辆分类筛选"></div>
         </div>
-      </div>
-    </section>
+        <div class="garage-grid" id="garage-grid" aria-label="车辆卡牌图鉴"></div>
+      </section>
+    </main>
+  </div>
 
-    <section class="panel panel-finale" id="panel-3" data-index="3">
-      <div class="panel-inner finale-grid">
-        <div class="showcase-deck" data-depth="0.18" aria-label="游戏成果展示">
-          <article class="showcase-card card-a">
-            <div class="showcase-copy">
-              <span>01 / 找词</span>
-              <strong>车车找词</strong>
-              <p>从轮胎、车灯和车身开始，选对词卡。</p>
-            </div>
-            <div class="showcase-media">
-              <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/white-truck.jpg">
-                <source src="./assets/videos/white-truck.mp4" type="video/mp4">
-              </video>
-            </div>
-          </article>
+  <div class="reward-pop is-hidden" id="reward-pop" role="status" aria-live="polite">
+    <span class="reward-burst" aria-hidden="true"></span>
+    <strong id="reward-title">New card unlocked</strong>
+    <p id="reward-text">A new vehicle card is now in your garage.</p>
+    <button type="button" class="primary-btn small" data-screen-target="garage">查看车库</button>
+  </div>
 
-          <article class="showcase-card card-b">
-            <div class="showcase-media">
-              <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/red-racer.jpg">
-                <source src="./assets/videos/red-racer.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="showcase-strip">
-              <span><b>4</b>游戏模式</span>
-              <span><b>0</b>账号流程</span>
-              <span><b>1</b>单页完成</span>
-            </div>
-          </article>
+  <dialog class="detail-modal" id="vehicle-modal" aria-labelledby="vehicle-detail-title">
+    <form method="dialog">
+      <button class="modal-close" type="submit" aria-label="关闭详情">×</button>
+    </form>
+    <div class="detail-body" id="detail-body"></div>
+  </dialog>
 
-          <article class="showcase-card card-c">
-            <div class="showcase-media">
-              <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/black-racer.jpg">
-                <source src="./assets/videos/black-racer.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="showcase-copy">
-              <span>04 / 表达</span>
-              <strong>小小讲解员</strong>
-              <p>每次挑战最后都能说出一句自己的发现。</p>
-            </div>
-          </article>
-        </div>
-        <div class="finale-copy">
-          <p class="eyebrow">Game outcomes</p>
-          <h2>从喜欢车车<br>到说出发现</h2>
-          <p>游戏结果不是分数压力，而是一次清楚的小反馈：我选对了哪个词，我排对了哪一步，我能用一句话讲出什么。</p>
-          <div class="actions">
-            <a class="primary-cta yellow" href="#panel-0">回到首页<span aria-hidden="true">↑</span></a>
-            <a class="ghost-cta" href="#panel-1">选择游戏</a>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+  <dialog class="parent-modal" id="parent-modal" aria-labelledby="parent-title">
+    <form method="dialog">
+      <button class="modal-close" type="submit" aria-label="关闭家长说明">×</button>
+    </form>
+    <div class="parent-content">
+      <p class="eyebrow">For parents</p>
+      <h2 id="parent-title">单页、无账号、低压力数字学习</h2>
+      <p>第一版 MVP 聚焦 4–9 岁儿童的轻量玩法：观察车辆、点击目标、数数量、做 10 以内加减法。所有反馈都在当前页面内完成，不包含多用户体系、账号系统或二级页面。</p>
+      <ul>
+        <li>正确反馈：星星、贴纸感弹窗、新卡片。</li>
+        <li>错误反馈：Try again / Let’s count together。</li>
+        <li>学习目标：数数、加法、减法、分类计数、基础车辆英文词汇。</li>
+      </ul>
+    </div>
+  </dialog>
 
   <script src="./app.js"></script>
 </body>
