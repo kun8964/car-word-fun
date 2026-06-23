@@ -375,6 +375,20 @@ h2 {
   margin-top: 34px;
 }
 
+.scope-note {
+  display: inline-flex;
+  margin: 18px 0 0;
+  padding: 9px 13px;
+  border: 1px solid rgba(18, 24, 40, 0.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.58);
+  color: rgba(18, 24, 40, 0.56);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.2;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.76);
+}
+
 .video-stage {
   position: relative;
   opacity: 0;
@@ -486,10 +500,15 @@ h2 {
 .feature-icon {
   width: 58px;
   height: 58px;
+  display: grid;
+  place-items: center;
   border-radius: 20px;
   background:
     linear-gradient(145deg, rgba(255,255,255,0.92), rgba(235,245,255,0.86)),
     radial-gradient(circle at 50% 50%, rgba(34,121,242,0.12), transparent 60%);
+  color: var(--blue);
+  font-size: 1.12rem;
+  font-weight: 900;
   box-shadow: var(--soft-shadow), inset 0 1px 0 rgba(255,255,255,0.86);
 }
 
