@@ -73,45 +73,59 @@
           <h2>先玩哪一个？</h2>
           <p class="lede">当前版本先明确 4 个单人小游戏方向。每个游戏只围绕一个小目标，适合孩子在当前页面里快速理解、尝试和重复练习。</p>
           <div class="feature-list">
-            <article>
+            <button class="game-card is-selected" type="button" data-game="word" aria-pressed="true">
               <span class="feature-icon" aria-hidden="true">词</span>
               <div>
                 <h3>车车找词</h3>
                 <p>看车模画面，选择正确的中文或英文词卡。</p>
               </div>
               <b>01</b>
-            </article>
-            <article>
+            </button>
+            <button class="game-card" type="button" data-game="parts" aria-pressed="false">
               <span class="feature-icon" aria-hidden="true">配</span>
               <div>
                 <h3>零件配对</h3>
                 <p>把轮胎、车灯、车门等部件和名称配起来。</p>
               </div>
               <b>02</b>
-            </article>
-            <article>
+            </button>
+            <button class="game-card" type="button" data-game="route" aria-pressed="false">
               <span class="feature-icon" aria-hidden="true">序</span>
               <div>
                 <h3>路线排序</h3>
                 <p>按启动、转弯、加速、停车，把动作顺序排对。</p>
               </div>
               <b>03</b>
-            </article>
-            <article>
+            </button>
+            <button class="game-card" type="button" data-game="speaker" aria-pressed="false">
               <span class="feature-icon" aria-hidden="true">讲</span>
               <div>
                 <h3>小小讲解员</h3>
                 <p>用给定词卡讲一句作品说明，练观察和表达。</p>
               </div>
               <b>04</b>
-            </article>
+            </button>
           </div>
         </div>
 
-        <div class="video-stage framed-video" data-depth="0.16">
-          <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/black-racer.jpg">
-            <source src="./assets/videos/black-racer.mp4" type="video/mp4">
-          </video>
+        <div class="game-playground" data-depth="0.16">
+          <aside class="game-preview" aria-live="polite">
+            <p class="preview-label">当前玩法</p>
+            <h3 id="game-preview-title">车车找词</h3>
+            <p id="game-preview-desc">看车模画面，选择正确的中文或英文词卡。</p>
+            <div class="game-chips" id="game-preview-chips" aria-label="示例选项">
+              <button type="button">wheel</button>
+              <button type="button">car</button>
+              <button type="button">road</button>
+            </div>
+            <button class="mini-play" type="button" data-start-game="word">开始这一局</button>
+            <p class="game-feedback" id="game-feedback">已选择：车车找词。点击模式可切换玩法。</p>
+          </aside>
+          <div class="video-stage framed-video">
+            <video class="motion-video" autoplay muted loop playsinline preload="metadata" poster="./assets/posters/black-racer.jpg">
+              <source src="./assets/videos/black-racer.mp4" type="video/mp4">
+            </video>
+          </div>
         </div>
       </div>
     </section>
