@@ -8,7 +8,8 @@ import {
   X,
 } from 'lucide-react';
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { VEHICLES, Vehicle, VehicleColor } from './vehicleData';
+import { VEHICLES, Vehicle, VehicleColor, VehicleCategory } from './vehicleData';
+import { DEFAULT_V2, migrateV1toV2, readV2, writeV2, type StorageV2 } from './storage';
 
 type View = 'home' | 'play' | 'garage' | 'parents';
 type Direction = 'next' | 'prev';
@@ -290,10 +291,37 @@ const COLOR_OPTIONS: VehicleColor[] = [
   'gray',
   'brown',
 ];
+const CATEGORY_OPTIONS: VehicleCategory[] = [
+  'car',
+  'race',
+  'bus',
+  'construction',
+  'motorcycle',
+  'offroad',
+  'aircraft',
+];
+const CATEGORY_LABELS: Record<Language, Record<VehicleCategory, string>> = {
+  en: {
+    car: 'Car',
+    race: 'Race',
+    bus: 'Bus',
+    construction: 'Construction',
+    motorcycle: 'Motorcycle',
+    offroad: 'Off-road',
+    aircraft: 'Aircraft',
+  },
+  zh: {
+    car: '汽车',
+    race: '赛车',
+    bus: '巴士',
+    construction: '工程车',
+    motorcycle: '摩托车',
+    offroad: '越野车',
+    aircraft: '飞机',
+  },
+};
 const GAME_COLORS: VehicleColor[] = ['red', 'blue', 'yellow', 'green', 'white', 'black'];
 const TARGET_MATCH_COUNT = 3;
-
-const STORAGE_KEY = 'car-car-adventure-color-tags-v1';
 
 const CARD_TRANSITION =
   'transform 650ms cubic-bezier(0.4,0,0.2,1), filter 650ms cubic-bezier(0.4,0,0.2,1), opacity 650ms cubic-bezier(0.4,0,0.2,1), left 650ms cubic-bezier(0.4,0,0.2,1), bottom 650ms cubic-bezier(0.4,0,0.2,1), width 650ms cubic-bezier(0.4,0,0.2,1)';
@@ -409,16 +437,6 @@ function getCardStyle(role: CardRole, isMobile: boolean): CSSProperties {
   };
 }
 
-function readStoredColorTags(): Record<string, VehicleColor> {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as Record<string, VehicleColor>;
-  } catch {
-    return {};
-  }
-}
-
 function sample<T>(items: T[], count: number) {
   const pool = [...items];
   const picked: T[] = [];
@@ -440,12 +458,15 @@ export function CarAdventureHero() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [colorOverrides, setColorOverrides] = useState<Record<string, VehicleColor>>(() =>
-    readStoredColorTags(),
-  );
+  const [storage, setStorage] = useState<StorageV2>(() => {
+    migrateV1toV2();
+    return readV2();
+  });
   const [round, setRound] = useState<Round | null>(null);
   const [score, setScore] = useState(0);
-  const [parentFilter, setParentFilter] = useState<VehicleColor | 'all'>('all');
+  const [showReward, setShowReward] = useState<string | null>(null);
+  const [showAllCollected, setShowAllCollected] = useState(false);
+  const [parentFilter, setParentFilter] = useState<'all' | VehicleColor | VehicleCategory>('all');
   const animationTimer = useRef<number | null>(null);
   const autoPausedUntil = useRef(0);
   const isAnimatingRef = useRef(false);
@@ -462,8 +483,15 @@ export function CarAdventureHero() {
   );
 
   const colorForVehicle = useCallback(
-    (vehicle: Vehicle): VehicleColor => colorOverrides[vehicle.id] || vehicle.color,
-    [colorOverrides],
+    (vehicle: Vehicle): VehicleColor =>
+      storage.colorOverrides[vehicle.id] || vehicle.color,
+    [storage.colorOverrides],
+  );
+
+  const categoryForVehicle = useCallback(
+    (vehicle: Vehicle): VehicleCategory =>
+      storage.categoryOverrides[vehicle.id] || vehicle.category,
+    [storage.categoryOverrides],
   );
 
   const markedVehicles = useMemo(
@@ -511,8 +539,8 @@ export function CarAdventureHero() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(colorOverrides));
-  }, [colorOverrides]);
+    writeV2(storage);
+  }, [storage]);
 
   useEffect(() => {
     return () => {
@@ -636,9 +664,30 @@ export function CarAdventureHero() {
   );
 
   const updateVehicleColor = useCallback((vehicleId: string, color: VehicleColor) => {
-    setColorOverrides((previous) => ({
-      ...previous,
-      [vehicleId]: color,
+    setStorage((prev) => ({
+      ...prev,
+      colorOverrides: { ...prev.colorOverrides, [vehicleId]: color },
+    }));
+  }, []);
+
+  const updateVehicleCategory = useCallback((vehicleId: string, category: VehicleCategory) => {
+    setStorage((prev) => ({
+      ...prev,
+      categoryOverrides: { ...prev.categoryOverrides, [vehicleId]: category },
+    }));
+  }, []);
+
+  const toggleLockColor = useCallback((vehicleId: string) => {
+    setStorage((prev) => ({
+      ...prev,
+      lockedColors: { ...prev.lockedColors, [vehicleId]: !prev.lockedColors[vehicleId] },
+    }));
+  }, []);
+
+  const toggleLockCategory = useCallback((vehicleId: string) => {
+    setStorage((prev) => ({
+      ...prev,
+      lockedCategories: { ...prev.lockedCategories, [vehicleId]: !prev.lockedCategories[vehicleId] },
     }));
   }, []);
 
@@ -652,8 +701,11 @@ export function CarAdventureHero() {
 
   const parentVehicles = useMemo(() => {
     if (parentFilter === 'all') return VEHICLES;
-    return VEHICLES.filter((vehicle) => colorForVehicle(vehicle) === parentFilter);
-  }, [colorForVehicle, parentFilter]);
+    if (COLOR_OPTIONS.includes(parentFilter as VehicleColor)) {
+      return VEHICLES.filter((vehicle) => colorForVehicle(vehicle) === parentFilter);
+    }
+    return VEHICLES.filter((vehicle) => categoryForVehicle(vehicle) === parentFilter);
+  }, [colorForVehicle, categoryForVehicle, parentFilter]);
 
   const formatFindPrompt = (color?: VehicleColor) => {
     if (!color) return `${t.play.find} ${t.play.fallbackColor}`;
@@ -1091,7 +1143,7 @@ export function CarAdventureHero() {
             <button
               className="inline-flex items-center gap-2 rounded-full border border-[#202A36]/20 bg-white/55 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.12em]"
               type="button"
-              onClick={() => setColorOverrides({})}
+              onClick={() => setStorage({ ...DEFAULT_V2 })}
             >
               {t.parents.reset}
             </button>
@@ -1123,11 +1175,28 @@ export function CarAdventureHero() {
                 {colorLabel(color)} {colorCounts.get(color) || 0}
               </button>
             ))}
+            {CATEGORY_OPTIONS.map((cat) => (
+              <button
+                key={cat}
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold uppercase tracking-[0.12em] ${
+                  parentFilter === cat
+                    ? 'border-[#202A36] bg-[#202A36] text-white'
+                    : 'border-[#202A36]/20 bg-white/45'
+                }`}
+                type="button"
+                onClick={() => setParentFilter(cat)}
+              >
+                {CATEGORY_LABELS[language][cat]}
+              </button>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {parentVehicles.map((vehicle) => {
               const currentColor = colorForVehicle(vehicle);
+              const currentCategory = categoryForVehicle(vehicle);
+              const colorLocked = storage.lockedColors[vehicle.id] || false;
+              const catLocked = storage.lockedCategories[vehicle.id] || false;
 
               return (
                 <article
@@ -1140,14 +1209,25 @@ export function CarAdventureHero() {
                   <div className="min-w-0">
                     <strong className="block truncate text-sm">{vehicle.name}</strong>
                     <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] opacity-55">
-                      {vehicle.category}
+                      {CATEGORY_LABELS[language][currentCategory]}
                     </span>
-                    <label className="mt-3 block text-xs font-extrabold uppercase tracking-[0.12em] opacity-60">
-                      {t.parents.mainColor}
-                    </label>
+                    <div className="mt-3 flex items-center gap-2">
+                      <label className="text-xs font-extrabold uppercase tracking-[0.12em] opacity-60">
+                        {t.parents.mainColor}
+                      </label>
+                      <button
+                        type="button"
+                        className="text-sm"
+                        onClick={() => toggleLockColor(vehicle.id)}
+                        title={colorLocked ? '解锁颜色' : '锁定颜色'}
+                      >
+                        {colorLocked ? '🔒' : '🔓'}
+                      </button>
+                    </div>
                     <select
                       className="mt-2 w-full rounded-2xl border border-[#202A36]/15 bg-[#F8F4F4] px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#202A36]/20"
                       value={currentColor}
+                      disabled={colorLocked}
                       onChange={(event) =>
                         updateVehicleColor(vehicle.id, event.target.value as VehicleColor)
                       }
@@ -1156,6 +1236,33 @@ export function CarAdventureHero() {
                       {COLOR_OPTIONS.map((color) => (
                         <option key={color} value={color}>
                           {colorLabel(color)}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="mt-3 flex items-center gap-2">
+                      <label className="text-xs font-extrabold uppercase tracking-[0.12em] opacity-60">
+                        {language === 'zh' ? '类别' : 'Category'}
+                      </label>
+                      <button
+                        type="button"
+                        className="text-sm"
+                        onClick={() => toggleLockCategory(vehicle.id)}
+                        title={catLocked ? '解锁类别' : '锁定类别'}
+                      >
+                        {catLocked ? '🔒' : '🔓'}
+                      </button>
+                    </div>
+                    <select
+                      className="mt-2 w-full rounded-2xl border border-[#202A36]/15 bg-[#F8F4F4] px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#202A36]/20"
+                      value={currentCategory}
+                      disabled={catLocked}
+                      onChange={(event) =>
+                        updateVehicleCategory(vehicle.id, event.target.value as VehicleCategory)
+                      }
+                    >
+                      {CATEGORY_OPTIONS.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {CATEGORY_LABELS[language][cat]}
                         </option>
                       ))}
                     </select>

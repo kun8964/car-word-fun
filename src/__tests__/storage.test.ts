@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { readV2, writeV2, migrateV1toV2, DEFAULT_V2 } from '../storage';
+import { readV2, writeV2, migrateV1toV2, DEFAULT_V2, type StorageV2 } from '../storage';
 
 describe('storage', () => {
   beforeEach(() => localStorage.clear());
@@ -9,7 +9,7 @@ describe('storage', () => {
   });
 
   it('should persist and read colorOverrides', () => {
-    const data = { ...DEFAULT_V2, colorOverrides: { '458': 'red' } };
+    const data: StorageV2 = { ...DEFAULT_V2, colorOverrides: { '458': 'red' } };
     writeV2(data);
     expect(readV2().colorOverrides).toEqual({ '458': 'red' });
   });
