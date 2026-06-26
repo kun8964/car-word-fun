@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="车车大联盟幼儿学习娱乐网站原型，用磨砂树脂车车素材构建可爱的学习游戏世界。">
+  <title>车车大联盟 | 小小车车学习世界</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23f35b45'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Arial,sans-serif' font-size='34' font-weight='800' fill='white'%3EC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&family=Nunito+Sans:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <a class="skip-link" href="#game-lab">跳到游戏区</a>
+
+  <header class="site-nav" aria-label="主导航">
+    <a class="brand-lockup" href="#top" aria-label="返回首页">
+      <span class="brand-mark" aria-hidden="true">C</span>
+      <span>
+        <strong>车车大联盟</strong>
+        <small>Kids Garage</small>
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="页面导航">
+      <a href="#track-town">车车小镇</a>
+      <a href="#game-lab">玩一关</a>
+      <a href="#garage">收藏馆</a>
+      <a href="#parents">家长须知</a>
+    </nav>
+    <a class="nav-cta" href="#game-lab">开始玩</a>
+  </header>
+
+  <main id="top">
+    <section class="hero-section" aria-labelledby="hero-title">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="sky-orb sky-orb-a"></span>
+        <span class="sky-orb sky-orb-b"></span>
+        <span class="road-ribbon road-ribbon-a"></span>
+        <span class="road-ribbon road-ribbon-b"></span>
+        <span class="letter-sign sign-a">A</span>
+        <span class="letter-sign sign-b">B</span>
+        <span class="letter-sign sign-c">C</span>
+      </div>
+
+      <div class="hero-copy">
+        <p class="eyebrow">幼儿车车学习娱乐网站</p>
+        <h1 id="hero-title">把每一辆车车<br>变成会玩的知识点</h1>
+        <p class="hero-lede">用磨砂树脂风格的车车素材，做一个能认车、学词、听发音、闯关和收藏的儿童学习世界。</p>
+        <div class="hero-actions" aria-label="主要操作">
+          <a class="primary-action" href="#game-lab">进入第一关</a>
+          <a class="secondary-action" href="#track-town">看看小镇</a>
+        </div>
+        <div class="hero-stats" aria-label="项目亮点">
+          <span><strong>52</strong><small>辆树脂车素材</small></span>
+          <span><strong>8</strong><small>种游戏模式方向</small></span>
+          <span><strong>3+</strong><small>岁启蒙友好</small></span>
+        </div>
+      </div>
+
+      <div class="hero-stage" aria-label="车车展示舞台">
+        <div class="hero-card hero-card-main">
+          <div class="stage-label">今日主角</div>
+          <img id="hero-car-main" alt="红色玩具车" src="">
+          <div class="stage-caption">
+            <strong>摸得到的车车质感</strong>
+            <span>大图、软阴影、轻浮动，像高级玩具展柜。</span>
+          </div>
+        </div>
+        <div class="hero-card hero-card-small hero-mini-a">
+          <img id="hero-car-a" alt="城市车车" src="">
+        </div>
+        <div class="hero-card hero-card-small hero-mini-b">
+          <img id="hero-car-b" alt="工程车车" src="">
+        </div>
+      </div>
+    </section>
+
+    <section class="toy-shelf-section" aria-labelledby="shelf-title">
+      <div class="section-heading">
+        <p class="eyebrow">Resin Toy Shelf</p>
+        <h2 id="shelf-title">先让孩子喜欢这些车</h2>
+        <p>素材不只是图片，而是可以被点亮、发声、闯关和收藏的车车角色。</p>
+      </div>
+      <div class="shelf-rail" id="shelf-rail" aria-label="精选车车素材"></div>
+    </section>
+
+    <section class="track-town-section" id="track-town" aria-labelledby="track-title">
+      <div class="track-sticky">
+        <div class="track-intro">
+          <p class="eyebrow">Parallax Track Town</p>
+          <h2 id="track-title">滚动穿过车车小镇</h2>
+          <p>桌面端是横向视差学习地图，移动端自动变成纵向关卡卡片。每一站只讲一个动作。</p>
+        </div>
+        <div class="track-viewport">
+          <div class="track-line" aria-hidden="true"></div>
+          <div class="track-rail" id="track-rail"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-lab-section" id="game-lab" aria-labelledby="game-title">
+      <div class="game-shell">
+        <div class="game-copy">
+          <p class="eyebrow">Playable MVP</p>
+          <h2 id="game-title">先做两个最稳的学习玩法</h2>
+          <p>“车车认认看”负责车辆认知，“字母加油站”负责英文启蒙。都使用真实素材，不用表情符号占位。</p>
+          <div class="mode-switch" role="tablist" aria-label="选择游戏模式">
+            <button class="mode-button is-active" type="button" data-mode="recognition" role="tab" aria-selected="true">车车认认看</button>
+            <button class="mode-button" type="button" data-mode="letters" role="tab" aria-selected="false">字母加油站</button>
+          </div>
+        </div>
+
+        <div class="game-card" aria-live="polite">
+          <div class="game-topline">
+            <span id="game-mode-label">车车认认看</span>
+            <span id="game-progress">1 / 6</span>
+          </div>
+          <div class="score-strip">
+            <span>星星能量 <strong id="game-score">0</strong></span>
+            <span>已点亮 <strong id="game-unlocked">0</strong></span>
+          </div>
+          <div class="question-stage">
+            <div class="letter-display" id="letter-display" hidden>A</div>
+            <img id="question-image" alt="题目车车" src="">
+          </div>
+          <div class="question-copy">
+            <h3 id="question-title">这辆车车叫什么？</h3>
+            <p id="question-hint">选择正确的中文名称。</p>
+          </div>
+          <div class="option-grid" id="option-grid"></div>
+          <div class="game-feedback" id="game-feedback">选择一个答案开始。</div>
+          <div class="game-actions">
+            <button class="ghost-button" type="button" id="sound-button">听英文</button>
+            <button class="primary-action compact" type="button" id="next-button">下一题</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="garage-section" id="garage" aria-labelledby="garage-title">
+      <div class="section-heading garage-heading">
+        <p class="eyebrow">Collection Garage</p>
+        <h2 id="garage-title">车车收藏馆</h2>
+        <p>所有素材都进入收藏馆。完成游戏后，孩子会看到对应车车被点亮。</p>
+      </div>
+      <div class="filter-row" id="filter-row" aria-label="车辆分类筛选"></div>
+      <div class="garage-grid" id="garage-grid"></div>
+    </section>
+
+    <section class="parents-section" id="parents" aria-labelledby="parents-title">
+      <div class="parents-card">
+        <div class="parents-copy">
+          <p class="eyebrow">家长须知</p>
+          <h2 id="parents-title">安心玩，学得清楚</h2>
+          <p>这不是刺激竞速页，而是给低龄孩子用的车车学习空间。内容短、反馈轻、动效可降级，家长能快速看懂孩子在学什么。</p>
+          <div class="parent-metrics" aria-label="家长关心的基础信息">
+            <span><strong>3+</strong><small>岁启蒙友好</small></span>
+            <span><strong>52</strong><small>辆素材入库</small></span>
+            <span><strong>0</strong><small>失败惩罚</small></span>
+          </div>
+        </div>
+        <dl class="trust-grid">
+          <div>
+            <span class="trust-index">01</span>
+            <dt>无压力学习</dt>
+            <dd>不默认强倒计时，不用失败惩罚，鼓励孩子再试一次。</dd>
+          </div>
+          <div>
+            <span class="trust-index">02</span>
+            <dt>动效可控</dt>
+            <dd>遵守 reduced motion，移动端减少横向滚动和持续动画。</dd>
+          </div>
+          <div>
+            <span class="trust-index">03</span>
+            <dt>家长可读</dt>
+            <dd>学习目标、安全说明、隐私采集和报名流程单独展示。</dd>
+          </div>
+          <div>
+            <span class="trust-index">04</span>
+            <dt>素材资产化</dt>
+            <dd>每辆车都有分类、单词、知识点和徽章，不只是图库。</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <strong>车车大联盟 Kids Garage</strong>
+    <span>Prototype built from local resin vehicle assets.</span>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>

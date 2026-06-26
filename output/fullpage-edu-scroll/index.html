@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Vehicle Card Collection + Math Learning，面向儿童的车辆卡牌收集与数字学习网页游戏。">
+  <title>Vehicle Card Collection | 车车卡牌数学游戏</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%234da3ff'/%3E%3Cpath d='M13 39h38c2 0 4-2 4-4v-7c0-2-1-3-3-4l-8-3-5-7c-1-1-2-2-4-2H24c-2 0-3 1-4 2l-5 8-5 2c-2 1-3 3-3 5v6c0 2 2 4 4 4h2z' fill='white'/%3E%3Ccircle cx='21' cy='41' r='6' fill='%23172033'/%3E%3Ccircle cx='45' cy='41' r='6' fill='%23172033'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar" aria-label="主导航">
+      <button class="brand-button" type="button" data-screen-target="home" aria-label="回到首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img" aria-label="车车大联盟标志">
+            <path d="M5 20h22c1.3 0 2.4-1.1 2.4-2.4v-3.1c0-.9-.5-1.7-1.3-2.1l-4.3-2-3.2-4.2c-.5-.6-1.2-.9-2-.9h-7.2c-.8 0-1.6.4-2 1.1l-3 4.3-2.3 1C3 12.2 2.4 13.2 2.4 14.4v3.2C2.4 18.9 3.7 20 5 20Z" fill="currentColor"/>
+            <circle cx="9.5" cy="21" r="3" fill="#fff"/>
+            <circle cx="23" cy="21" r="3" fill="#fff"/>
+          </svg>
+        </span>
+        <span>
+          <strong>车车卡牌</strong>
+          <small>Math Garage</small>
+        </span>
+      </button>
+
+      <nav class="nav-tabs" aria-label="游戏场景">
+        <button class="nav-tab is-active" type="button" data-screen-target="home">首页</button>
+        <button class="nav-tab" type="button" data-screen-target="map">探索</button>
+        <button class="nav-tab" type="button" data-screen-target="play">任务</button>
+        <button class="nav-tab" type="button" data-screen-target="garage">车库</button>
+      </nav>
+
+      <div class="player-stats" aria-label="当前收集进度">
+        <span><b id="star-count">0</b><small>Stars</small></span>
+        <span><b id="card-count">3</b><small>Cards</small></span>
+      </div>
+    </header>
+
+    <main class="screen-stack">
+      <section class="screen is-active" id="screen-home" data-screen="home" aria-labelledby="home-title">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Vehicle Card Collection + Math Learning</p>
+            <h1 id="home-title">找车，数数，收集卡牌</h1>
+            <p class="hero-text">把车辆图片变成可收集卡牌。孩子在城市、赛车场、工地和机场里寻找车辆，完成简单数字任务，再把新卡片放进自己的车库。</p>
+            <div class="hero-actions">
+              <button class="primary-btn" type="button" data-screen-target="map">开始探索</button>
+              <button class="soft-btn" type="button" data-screen-target="garage">我的车库</button>
+              <button class="plain-btn" type="button" data-parent-open>家长说明</button>
+            </div>
+            <div class="daily-card">
+              <span class="tiny-label">今日任务</span>
+              <strong>Find 3 race cars</strong>
+              <p>找到 3 辆赛车，完成一道加法题，解锁一张新卡。</p>
+            </div>
+          </div>
+
+          <div class="hero-card-stage" aria-label="车辆卡牌预览">
+            <article class="toy-card hero-card hero-card-a">
+              <span class="rarity rarity-rare">Rare III</span>
+              <img src="./assets/vehicles/redbull-rb7.png" alt="Red Bull RB7 race car">
+              <h2>Red Bull RB7</h2>
+              <p>红牛赛车</p>
+            </article>
+            <article class="toy-card hero-card hero-card-b">
+              <span class="rarity rarity-common">Common I</span>
+              <img src="./assets/vehicles/audi-a4.png" alt="Audi A4 city car">
+              <h2>Audi A4</h2>
+              <p>城市轿车</p>
+            </article>
+            <article class="toy-card hero-card hero-card-c">
+              <span class="rarity rarity-nice">Nice II</span>
+              <img src="./assets/vehicles/excavator.png" alt="Excavator construction vehicle">
+              <h2>Excavator</h2>
+              <p>挖掘机</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-map" data-screen="map" aria-labelledby="map-title">
+        <div class="section-heading">
+          <p class="eyebrow">Explore map</p>
+          <h2 id="map-title">选择一个地方找车</h2>
+          <p>每个区域都有不同类型的车辆。先从赛车场开始，完成第一张新卡收集。</p>
+        </div>
+        <div class="map-grid" id="map-grid" aria-label="探索区域"></div>
+      </section>
+
+      <section class="screen" id="screen-play" data-screen="play" aria-labelledby="play-title">
+        <div class="play-layout">
+          <aside class="mission-panel">
+            <p class="eyebrow">Current mission</p>
+            <h2 id="play-title">Find 3 race cars</h2>
+            <p id="mission-copy">点击画面中的赛车。找到 3 辆后，会出现一个数字题。</p>
+            <div class="progress-wrap">
+              <div class="progress-top">
+                <span id="mission-count">0 / 3 found</span>
+                <span id="mission-area">Race Track</span>
+              </div>
+              <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+            </div>
+            <div class="feedback-card" id="feedback-card" aria-live="polite">
+              <strong>Ready</strong>
+              <p>Try tapping a race car.</p>
+            </div>
+            <button class="soft-btn wide" type="button" data-reset-mission>重新开始这一局</button>
+          </aside>
+
+          <div class="play-scene">
+            <div class="scene-toolbar">
+              <span class="pill">Look</span>
+              <span class="pill">Tap</span>
+              <span class="pill">Count</span>
+            </div>
+            <div class="vehicle-field" id="vehicle-field" aria-label="找车区域"></div>
+            <div class="math-panel is-hidden" id="math-panel" aria-live="polite">
+              <p class="tiny-label">Math time</p>
+              <h3 id="math-question">You found 3 race cars. Add 2 more. How many cars now?</h3>
+              <div class="answer-row" id="answer-row"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-garage" data-screen="garage" aria-labelledby="garage-title">
+        <div class="garage-head">
+          <div>
+            <p class="eyebrow">My garage</p>
+            <h2 id="garage-title">我的车库</h2>
+            <p>查看已经收集的车辆卡片，也可以点未解锁剪影看看线索。</p>
+          </div>
+          <div class="filter-row" id="filter-row" aria-label="车辆分类筛选"></div>
+        </div>
+        <div class="garage-grid" id="garage-grid" aria-label="车辆卡牌图鉴"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="reward-pop is-hidden" id="reward-pop" role="status" aria-live="polite">
+    <span class="reward-burst" aria-hidden="true"></span>
+    <strong id="reward-title">New card unlocked</strong>
+    <p id="reward-text">A new vehicle card is now in your garage.</p>
+    <button type="button" class="primary-btn small" data-screen-target="garage">查看车库</button>
+  </div>
+
+  <dialog class="detail-modal" id="vehicle-modal" aria-labelledby="vehicle-detail-title">
+    <form method="dialog">
+      <button class="modal-close" type="submit" aria-label="关闭详情">×</button>
+    </form>
+    <div class="detail-body" id="detail-body"></div>
+  </dialog>
+
+  <dialog class="parent-modal" id="parent-modal" aria-labelledby="parent-title">
+    <form method="dialog">
+      <button class="modal-close" type="submit" aria-label="关闭家长说明">×</button>
+    </form>
+    <div class="parent-content">
+      <p class="eyebrow">For parents</p>
+      <h2 id="parent-title">单页、无账号、低压力数字学习</h2>
+      <p>第一版 MVP 聚焦 4–9 岁儿童的轻量玩法：观察车辆、点击目标、数数量、做 10 以内加减法。所有反馈都在当前页面内完成，不包含多用户体系、账号系统或二级页面。</p>
+      <ul>
+        <li>正确反馈：星星、贴纸感弹窗、新卡片。</li>
+        <li>错误反馈：Try again / Let’s count together。</li>
+        <li>学习目标：数数、加法、减法、分类计数、基础车辆英文词汇。</li>
+      </ul>
+    </div>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>
