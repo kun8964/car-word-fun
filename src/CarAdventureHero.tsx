@@ -269,6 +269,14 @@ const HERO_VEHICLE_IDS = [
   'v4',
   'cat-797',
   'f40',
+  '250gto',
+  'f2004',
+  '312t',
+  'f1',
+  'mp4',
+  'vehicle-06',
+  'e-type',
+  'h1',
 ];
 
 const NAV_ITEMS: Array<{ label: NavLabel; view: View }> = [
@@ -605,7 +613,9 @@ export function CarAdventureHero() {
       const distractorPool = markedVehicles.filter(
         (vehicle) => colorForVehicle(vehicle) !== targetColor,
       );
-      const targetVehicles = sample(targetPool, Math.min(targetPool.length, TARGET_MATCH_COUNT));
+      const maxTargetCount = Math.min(targetPool.length, 5);
+      const targetCount = Math.floor(Math.random() * maxTargetCount) + 1;
+      const targetVehicles = sample(targetPool, targetCount);
       const distractors = sample(distractorPool, Math.max(0, 8 - targetVehicles.length));
       const options = shuffle([...targetVehicles, ...distractors]).slice(0, 8);
 
@@ -658,6 +668,26 @@ export function CarAdventureHero() {
 
       if (result === 'correct') {
         setScore((value) => value + 1);
+        const newStreak = storage.streak + 1;
+        setStorage((prev) => ({ ...prev, streak: newStreak }));
+        if (newStreak % 5 === 0) {
+          const uncollected = markedVehicles
+            .filter((v) => !storage.collectedCards.includes(v.id))
+            .map((v) => v.id);
+          if (uncollected.length > 0) {
+            const rewardId = uncollected[Math.floor(Math.random() * uncollected.length)];
+            setShowReward(rewardId);
+            setStorage((prev) => ({
+              ...prev,
+              collectedCards: [...prev.collectedCards, rewardId],
+            }));
+          } else {
+            setShowAllCollected(true);
+          }
+        }
+      }
+      if (!isCorrect) {
+        setStorage((prev) => ({ ...prev, streak: 0 }));
       }
     },
     [colorForVehicle, round],
@@ -963,7 +993,20 @@ export function CarAdventureHero() {
         </main>
       )}
 
-      {view === 'play' && (
+      {view === 'play' && markedVehicles.length === 0 ? (
+        <main className="relative z-[5] mx-auto flex min-h-[100dvh] max-w-[1440px] flex-col items-center justify-center px-4 pb-10 pt-28 sm:px-8">
+          <p className="text-2xl font-extrabold opacity-50 text-center">
+            {language === 'zh' ? '请家长先标记车辆颜色' : 'Please mark vehicle colors first'}
+          </p>
+          <button
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
+            type="button"
+            onClick={() => openView('parents')}
+          >
+            {language === 'zh' ? '去家长控制 →' : 'Parents →'}
+          </button>
+        </main>
+      ) : view === 'play' && (
         <main className="relative z-[5] mx-auto min-h-[100dvh] max-w-[1440px] px-4 pb-10 pt-28 sm:px-8">
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -1096,33 +1139,40 @@ export function CarAdventureHero() {
                 {t.garage.kicker}
               </p>
               <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
-                {markedVehicles.length} {t.garage.markedVehicles}
+                {storage.collectedCards.length} / {markedVehicles.length}
               </h1>
             </div>
-            <button
-              className="inline-flex items-center gap-2 rounded-full border border-[#202A36]/20 bg-white/55 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.12em]"
-              type="button"
-              onClick={() => openView('parents')}
-            >
-              <Settings2 size={16} strokeWidth={2.25} />
-              {t.garage.editColors}
-            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {markedVehicles.map((vehicle) => (
-              <article
-                key={vehicle.id}
-                className="flex aspect-[4/3] flex-col items-center justify-center rounded-[28px] border border-[#202A36]/10 bg-white/35 p-3"
+          {storage.collectedCards.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-2xl font-extrabold opacity-50">
+                {language === 'zh' ? '还没有车车，快去玩游戏吧！' : 'No cars yet, go play!'}
+              </p>
+              <button
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
+                type="button"
+                onClick={() => openView('play')}
               >
-                <img className="h-[72%] w-full object-contain" src={assetUrl(vehicle.image)} alt={vehicle.name} />
-                <strong className="mt-1 max-w-full truncate text-xs">{vehicle.name}</strong>
-                <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] opacity-55">
-                  {colorLabel(colorForVehicle(vehicle))}
-                </span>
-              </article>
-            ))}
-          </div>
+                {language === 'zh' ? '去玩游戏 →' : 'Play →'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {VEHICLES.filter((v) => storage.collectedCards.includes(v.id)).map((vehicle) => (
+                <article
+                  key={vehicle.id}
+                  className="flex aspect-[4/3] flex-col items-center justify-center rounded-[28px] border border-[#202A36]/10 bg-white/35 p-3"
+                >
+                  <img className="h-[72%] w-full object-contain" src={assetUrl(vehicle.image)} alt={vehicle.name} />
+                  <strong className="mt-1 max-w-full truncate text-xs">{vehicle.name}</strong>
+                  <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] opacity-55">
+                    {colorLabel(colorForVehicle(vehicle))}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
         </main>
       )}
 
@@ -1272,6 +1322,51 @@ export function CarAdventureHero() {
             })}
           </div>
         </main>
+      )}
+      {showReward && (() => {
+        const rewardVehicle = VEHICLES.find((v) => v.id === showReward);
+        if (!rewardVehicle) return null;
+        return (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="mx-4 rounded-3xl bg-white p-8 text-center shadow-2xl">
+              <img
+                src={assetUrl(rewardVehicle.image)}
+                alt={rewardVehicle.name}
+                className="mx-auto h-40 object-contain"
+              />
+              <h2 className="mt-4 text-2xl font-extrabold">
+                {language === 'zh' ? '获得了新卡牌！' : 'New Card!'}
+              </h2>
+              <p className="mt-2 text-lg font-bold">{rewardVehicle.name}</p>
+              <button
+                className="mt-6 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
+                type="button"
+                onClick={() => setShowReward(null)}
+              >
+                {language === 'zh' ? '继续游戏' : 'Continue'}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+      {showAllCollected && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 rounded-3xl bg-white p-8 text-center shadow-2xl">
+            <h2 className="text-2xl font-extrabold">
+              {language === 'zh' ? '已收集全部车辆！' : 'All vehicles collected!'}
+            </h2>
+            <p className="mt-2 opacity-60">
+              {language === 'zh' ? '太厉害了！' : 'Amazing!'}
+            </p>
+            <button
+              className="mt-6 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
+              type="button"
+              onClick={() => setShowAllCollected(false)}
+            >
+              {language === 'zh' ? '继续游戏' : 'Continue'}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
