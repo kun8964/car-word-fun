@@ -210,10 +210,16 @@ function buildMathRound(
   }
 
   const choices = new Set<number>([answer]);
-  while (choices.size < 4) {
+  let attempts = 0;
+  while (choices.size < 4 && attempts < 100) {
     const offset = Math.floor(Math.random() * 5) - 2;
     const c = answer + offset;
     if (c >= 0 && c <= 10) choices.add(c);
+    attempts++;
+  }
+  // Fallback: fill with sequential numbers if random didn't produce enough
+  for (let n = 0; n <= 10 && choices.size < 4; n++) {
+    choices.add(n);
   }
 
   return {
