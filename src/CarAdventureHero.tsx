@@ -135,7 +135,7 @@ function HomeView() {
         className="pointer-events-none absolute inset-x-0 flex select-none items-center justify-center"
         data-hero-ghost
         style={{
-          zIndex: 2, top: isMobile ? '8%' : '5%', fontFamily: "'Anton', sans-serif",
+          zIndex: 2, top: isMobile ? '28%' : '25%', fontFamily: "'Anton', sans-serif",
           fontSize: 'clamp(42px, 10.8vw, 168px)', fontWeight: 400, lineHeight: 1,
           textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap',
         }}
