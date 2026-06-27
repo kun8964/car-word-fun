@@ -491,6 +491,7 @@ export function CarAdventureHero() {
   const [score, setScore] = useState(0);
   const [showReward, setShowReward] = useState<string | null>(null);
   const [showAllCollected, setShowAllCollected] = useState(false);
+  const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [parentFilter, setParentFilter] = useState<'all' | VehicleColor | VehicleCategory>('all');
   const animationTimer = useRef<number | null>(null);
   const autoPausedUntil = useRef(0);
@@ -1162,22 +1163,55 @@ export function CarAdventureHero() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {markedVehicles.map((vehicle) => {
               const collected = storage.collectedCards.includes(vehicle.id);
+              const flipped = flippedCards.has(vehicle.id);
               return (
                 <article
                   key={vehicle.id}
                   className={`relative rounded-2xl border-2 p-2 transition-all ${
                     collected
-                      ? 'border-[#202A36]/20 bg-white shadow-md'
+                      ? 'border-[#202A36]/20 bg-white shadow-md cursor-pointer'
                       : 'border-[#202A36]/5 bg-[#F8F4F4]'
                   }`}
-                  style={collected ? {} : { filter: 'grayscale(1) opacity(0.35)' }}
+                  style={{ perspective: '800px' }}
+                  onClick={() => {
+                    if (collected) {
+                      setFlippedCards((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(vehicle.id)) next.delete(vehicle.id);
+                        else next.add(vehicle.id);
+                        return next;
+                      });
+                    }
+                  }}
                 >
-                  <img
-                    className="aspect-[3/4] w-full rounded-xl object-cover"
-                    src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
-                    alt={vehicle.name}
-                    loading="lazy"
-                  />
+                  <div
+                    className="relative w-full"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    }}
+                  >
+                    <img
+                      className="aspect-[3/4] w-full rounded-xl object-cover"
+                      src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
+                      alt={vehicle.name}
+                      loading="lazy"
+                      style={{
+                        ...(collected ? {} : { filter: 'grayscale(1) opacity(0.35)' }),
+                        backfaceVisibility: 'hidden',
+                      }}
+                    />
+                    <img
+                      className="absolute inset-0 aspect-[3/4] w-full rounded-xl object-cover"
+                      src={`${import.meta.env.BASE_URL}cards/卡牌-背面.png`}
+                      alt=""
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                      }}
+                    />
+                  </div>
                   <div className="mt-2 text-center">
                     <strong
                       className={`block truncate text-xs ${
