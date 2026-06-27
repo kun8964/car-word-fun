@@ -28,15 +28,23 @@ type HeroSlide = {
   cta: string;
 };
 
-type QuestionType = 'color' | 'category';
+type QuestionType = 'color' | 'category' | 'mixed';
+
+type MixedTarget = {
+  color?: VehicleColor;
+  category?: VehicleCategory;
+  count: number;
+};
 
 type Round = {
   questionType: QuestionType;
   targetColor?: VehicleColor;
   targetCategory?: VehicleCategory;
+  mixedTargets?: MixedTarget[];
   targetCount: number;
   options: Vehicle[];
   selectedIds: string[];
+  matchedTargets: number[];  // which mixedTarget index each selected vehicle matches
   lastSelectedId: string | null;
   result: 'idle' | 'progress' | 'correct' | 'wrong';
 };
@@ -635,9 +643,86 @@ export function CarAdventureHero() {
       });
       const canDoColor = availableColors.length > 0;
       const canDoCategory = categoriesWithCounts.length > 0;
-      const useCategory = canDoCategory && (!canDoColor || Math.random() < 0.4);
+      const canDoMixed = canDoColor && canDoCategory;
+      const roll = Math.random();
+      const useMixed = canDoMixed && roll < 0.15;
+      const useCategory = !useMixed && canDoCategory && (!canDoColor || Math.random() < 0.4);
 
-      if (useCategory) {
+      if (useMixed) {
+        // Mixed question: randomly pick type A (multi-color) or type B (color+category cross)
+        const isCrossType = Math.random() < 0.5;
+        let mixedTargets: MixedTarget[];
+
+        if (isCrossType) {
+          // Type B: find vehicles matching color AND category (e.g. "红色的赛车")
+          const targetColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+          const crossPool = markedVehicles.filter(
+            (v) => colorForVehicle(v) === targetColor,
+          );
+          const availableCatsForColor = CATEGORY_OPTIONS.filter((cat) =>
+            crossPool.some((v) => categoryForVehicle(v) === cat),
+          );
+          if (availableCatsForColor.length === 0) {
+            // Fallback: just do a color question instead
+            setRound({
+              questionType: 'color',
+              targetColor,
+              targetCount: Math.floor(Math.random() * Math.min(crossPool.length, 5)) + 1,
+              options: sample(shuffle([...crossPool]), 8),
+              selectedIds: [],
+              matchedTargets: [],
+              lastSelectedId: null,
+              result: 'idle',
+            });
+            return;
+          }
+          const targetCategory = availableCatsForColor[Math.floor(Math.random() * availableCatsForColor.length)];
+          const matchPool = crossPool.filter((v) => categoryForVehicle(v) === targetCategory);
+          const maxCount = Math.min(matchPool.length, 3);
+          const targetCount = Math.floor(Math.random() * maxCount) + 1;
+          mixedTargets = [{ color: targetColor, category: targetCategory, count: targetCount }];
+        } else {
+          // Type A: multi-color (e.g. "找2辆红色 + 1辆蓝色")
+          const shuffled = shuffle([...availableColors]);
+          const c1 = shuffled[0];
+          const c2 = shuffled.length > 1 ? shuffled[1] : c1;
+          const pool1 = markedVehicles.filter((v) => colorForVehicle(v) === c1);
+          const pool2 = markedVehicles.filter((v) => colorForVehicle(v) === c2 && v.id !== pool1[0]?.id);
+          const cnt1 = Math.min(pool1.length, 2);
+          const cnt2 = Math.min(pool2.length, 2);
+          mixedTargets = [
+            { color: c1, count: Math.max(1, cnt1) },
+            { color: c2, count: Math.max(1, cnt2) },
+          ];
+        }
+
+        const totalTargetCount = mixedTargets.reduce((sum, t) => sum + t.count, 0);
+        const allTargetIds = new Set<string>();
+        mixedTargets.forEach((t) => {
+          markedVehicles
+            .filter((v) => {
+              if (t.color && t.category) return colorForVehicle(v) === t.color && categoryForVehicle(v) === t.category;
+              if (t.color) return colorForVehicle(v) === t.color;
+              return false;
+            })
+            .forEach((v) => allTargetIds.add(v.id));
+        });
+        const distractorPool = markedVehicles.filter((v) => !allTargetIds.has(v.id));
+        const targetVehicles = Array.from(allTargetIds).map((id) => VEHICLES.find((v) => v.id === id)).filter(Boolean) as Vehicle[];
+        const actualTargets = targetVehicles.slice(0, totalTargetCount);
+        const distractors = sample(distractorPool, Math.max(0, 8 - actualTargets.length));
+
+        setRound({
+          questionType: 'mixed',
+          mixedTargets,
+          targetCount: totalTargetCount,
+          options: shuffle([...actualTargets, ...distractors]).slice(0, 8),
+          selectedIds: [],
+          matchedTargets: [],
+          lastSelectedId: null,
+          result: 'idle',
+        });
+      } else if (useCategory) {
         // Category question: find vehicles of a specific category
         const targetCategory = categoriesWithCounts[Math.floor(Math.random() * categoriesWithCounts.length)];
         const targetPool = markedVehicles.filter((vehicle) => categoryForVehicle(vehicle) === targetCategory);
@@ -654,6 +739,7 @@ export function CarAdventureHero() {
           targetCount: targetVehicles.length,
           options,
           selectedIds: [],
+          matchedTargets: [],
           lastSelectedId: null,
           result: 'idle',
         });
@@ -676,6 +762,7 @@ export function CarAdventureHero() {
           targetCount: targetVehicles.length,
           options,
           selectedIds: [],
+          matchedTargets: [],
           lastSelectedId: null,
           result: 'idle',
         });
@@ -700,14 +787,47 @@ export function CarAdventureHero() {
     (vehicle: Vehicle) => {
       if (!round || round.result === 'correct') return;
 
-      const isCorrect = round.questionType === 'category'
-        ? categoryForVehicle(vehicle) === round.targetCategory
-        : colorForVehicle(vehicle) === round.targetColor;
+      const isCorrect = round.questionType === 'mixed'
+        ? (() => {
+            if (!round.mixedTargets) return false;
+            // Check if vehicle matches any target that still needs more vehicles
+            for (let i = 0; i < round.mixedTargets.length; i++) {
+              const t = round.mixedTargets[i];
+              const alreadyMatched = round.matchedTargets.filter((m) => m === i).length;
+              if (alreadyMatched >= t.count) continue;
+              if (t.color && t.category) {
+                if (colorForVehicle(vehicle) === t.color && categoryForVehicle(vehicle) === t.category) return true;
+              } else if (t.color) {
+                if (colorForVehicle(vehicle) === t.color) return true;
+              }
+            }
+            return false;
+          })()
+        : round.questionType === 'category'
+          ? categoryForVehicle(vehicle) === round.targetCategory
+          : colorForVehicle(vehicle) === round.targetColor;
       if (isCorrect && round.selectedIds.includes(vehicle.id)) {
         return;
       }
 
       const selectedIds = isCorrect ? [...round.selectedIds, vehicle.id] : round.selectedIds;
+      let matchedTargetIndex = -1;
+      if (isCorrect && round.questionType === 'mixed' && round.mixedTargets) {
+        for (let i = 0; i < round.mixedTargets.length; i++) {
+          const t = round.mixedTargets[i];
+          const alreadyMatched = round.matchedTargets.filter((m) => m === i).length;
+          if (alreadyMatched >= t.count) continue;
+          if (t.color && t.category) {
+            if (colorForVehicle(vehicle) === t.color && categoryForVehicle(vehicle) === t.category) { matchedTargetIndex = i; break; }
+          } else if (t.color) {
+            if (colorForVehicle(vehicle) === t.color) { matchedTargetIndex = i; break; }
+          }
+        }
+      }
+      const newMatchedTargets = matchedTargetIndex >= 0
+        ? [...round.matchedTargets, matchedTargetIndex]
+        : round.matchedTargets;
+
       const result = !isCorrect
         ? 'wrong'
         : selectedIds.length >= round.targetCount
@@ -717,6 +837,7 @@ export function CarAdventureHero() {
       setRound({
         ...round,
         selectedIds,
+        matchedTargets: newMatchedTargets,
         lastSelectedId: vehicle.id,
         result,
       });
@@ -793,6 +914,15 @@ export function CarAdventureHero() {
   }, [colorForVehicle, categoryForVehicle, parentFilter]);
 
   const formatRoundLabel = (roundData: Round) => {
+    if (roundData.questionType === 'mixed' && roundData.mixedTargets) {
+      const parts = roundData.mixedTargets.map((t) => {
+        let label = '';
+        if (t.color) label += colorLabel(t.color);
+        if (t.category) label += (label ? ' ' : '') + CATEGORY_LABELS[language][t.category];
+        return `${t.count} ${label}`;
+      });
+      return parts.join(' + ');
+    }
     if (roundData.questionType === 'category' && roundData.targetCategory) {
       const catLabel = CATEGORY_LABELS[language][roundData.targetCategory];
       return language === 'zh' ? `${catLabel}` : catLabel;
