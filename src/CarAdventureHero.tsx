@@ -28,8 +28,12 @@ type HeroSlide = {
   cta: string;
 };
 
+type QuestionType = 'color' | 'category';
+
 type Round = {
-  targetColor: VehicleColor;
+  questionType: QuestionType;
+  targetColor?: VehicleColor;
+  targetCategory?: VehicleCategory;
   targetCount: number;
   options: Vehicle[];
   selectedIds: string[];
@@ -622,32 +626,62 @@ export function CarAdventureHero() {
   }, [navigateHero, view]);
 
   const createRound = useCallback(
-    (preferredColor?: VehicleColor) => {
+    () => {
+      // Randomly pick question type
       const availableColors = GAME_COLORS.filter((color) => (colorCounts.get(color) || 0) > 0);
-      const targetColor =
-        preferredColor && availableColors.includes(preferredColor)
-          ? preferredColor
-          : availableColors[Math.floor(Math.random() * availableColors.length)] || 'red';
-      const targetPool = markedVehicles.filter((vehicle) => colorForVehicle(vehicle) === targetColor);
-      const distractorPool = markedVehicles.filter(
-        (vehicle) => colorForVehicle(vehicle) !== targetColor,
-      );
-      const maxTargetCount = Math.min(targetPool.length, 5);
-      const targetCount = Math.floor(Math.random() * maxTargetCount) + 1;
-      const targetVehicles = sample(targetPool, targetCount);
-      const distractors = sample(distractorPool, Math.max(0, 8 - targetVehicles.length));
-      const options = shuffle([...targetVehicles, ...distractors]).slice(0, 8);
-
-      setRound({
-        targetColor,
-        targetCount: targetVehicles.length,
-        options,
-        selectedIds: [],
-        lastSelectedId: null,
-        result: 'idle',
+      const categoriesWithCounts = CATEGORY_OPTIONS.filter((cat) => {
+        const count = markedVehicles.filter((v) => categoryForVehicle(v) === cat).length;
+        return count > 0;
       });
+      const canDoColor = availableColors.length > 0;
+      const canDoCategory = categoriesWithCounts.length > 0;
+      const useCategory = canDoCategory && (!canDoColor || Math.random() < 0.4);
+
+      if (useCategory) {
+        // Category question: find vehicles of a specific category
+        const targetCategory = categoriesWithCounts[Math.floor(Math.random() * categoriesWithCounts.length)];
+        const targetPool = markedVehicles.filter((vehicle) => categoryForVehicle(vehicle) === targetCategory);
+        const distractorPool = markedVehicles.filter((vehicle) => categoryForVehicle(vehicle) !== targetCategory);
+        const maxTargetCount = Math.min(targetPool.length, 5);
+        const targetCount = Math.floor(Math.random() * maxTargetCount) + 1;
+        const targetVehicles = sample(targetPool, targetCount);
+        const distractors = sample(distractorPool, Math.max(0, 8 - targetVehicles.length));
+        const options = shuffle([...targetVehicles, ...distractors]).slice(0, 8);
+
+        setRound({
+          questionType: 'category',
+          targetCategory,
+          targetCount: targetVehicles.length,
+          options,
+          selectedIds: [],
+          lastSelectedId: null,
+          result: 'idle',
+        });
+      } else {
+        // Color question (existing logic)
+        const targetColor = availableColors[Math.floor(Math.random() * availableColors.length)] || 'red';
+        const targetPool = markedVehicles.filter((vehicle) => colorForVehicle(vehicle) === targetColor);
+        const distractorPool = markedVehicles.filter(
+          (vehicle) => colorForVehicle(vehicle) !== targetColor,
+        );
+        const maxTargetCount = Math.min(targetPool.length, 5);
+        const targetCount = Math.floor(Math.random() * maxTargetCount) + 1;
+        const targetVehicles = sample(targetPool, targetCount);
+        const distractors = sample(distractorPool, Math.max(0, 8 - targetVehicles.length));
+        const options = shuffle([...targetVehicles, ...distractors]).slice(0, 8);
+
+        setRound({
+          questionType: 'color',
+          targetColor,
+          targetCount: targetVehicles.length,
+          options,
+          selectedIds: [],
+          lastSelectedId: null,
+          result: 'idle',
+        });
+      }
     },
-    [colorCounts, colorForVehicle, markedVehicles],
+    [categoryForVehicle, colorCounts, colorForVehicle, markedVehicles],
   );
 
   const openView = useCallback(
@@ -656,7 +690,7 @@ export function CarAdventureHero() {
       setIsMenuOpen(false);
       setView(nextView);
       if (nextView === 'play') {
-        createRound(nextView === 'play' ? undefined : 'red');
+        createRound();
       }
     },
     [createRound, pauseAutoRotation],
@@ -666,7 +700,9 @@ export function CarAdventureHero() {
     (vehicle: Vehicle) => {
       if (!round || round.result === 'correct') return;
 
-      const isCorrect = colorForVehicle(vehicle) === round.targetColor;
+      const isCorrect = round.questionType === 'category'
+        ? categoryForVehicle(vehicle) === round.targetCategory
+        : colorForVehicle(vehicle) === round.targetColor;
       if (isCorrect && round.selectedIds.includes(vehicle.id)) {
         return;
       }
@@ -756,24 +792,33 @@ export function CarAdventureHero() {
     return VEHICLES.filter((vehicle) => categoryForVehicle(vehicle) === parentFilter);
   }, [colorForVehicle, categoryForVehicle, parentFilter]);
 
-  const formatFindPrompt = (color?: VehicleColor) => {
-    if (!color) return `${t.play.find} ${t.play.fallbackColor}`;
-    return language === 'zh'
-      ? `${t.play.find}${colorLabel(color)}`
-      : `${t.play.find} ${colorLabel(color)}`;
+  const formatRoundLabel = (roundData: Round) => {
+    if (roundData.questionType === 'category' && roundData.targetCategory) {
+      const catLabel = CATEGORY_LABELS[language][roundData.targetCategory];
+      return language === 'zh' ? `${catLabel}` : catLabel;
+    }
+    return roundData.targetColor ? colorLabel(roundData.targetColor) : t.play.fallbackColor;
   };
 
-  const formatIdlePrompt = (color: VehicleColor) =>
-    language === 'zh'
-      ? `${t.play.idlePrefix}${colorLabel(color)}${t.play.idleSuffix}`
-      : `${t.play.idlePrefix} ${colorLabel(color)} ${t.play.idleSuffix}`;
+  const formatFindPrompt = (roundData: Round | null) => {
+    if (!roundData) return `${t.play.find} ${t.play.fallbackColor}`;
+    const label = formatRoundLabel(roundData);
+    return language === 'zh' ? `${t.play.find}${label}` : `${t.play.find} ${label}`;
+  };
 
-  const formatCorrectPrompt = (roundData: Round) =>
-    language === 'zh'
-      ? `${t.play.correctPrefix}${roundData.targetCount}辆${colorLabel(roundData.targetColor)}车。`
-      : `${t.play.correctPrefix} ${roundData.targetCount} ${colorLabel(
-          roundData.targetColor,
-        ).toLowerCase()} ${t.play.correctSuffix}`;
+  const formatIdlePrompt = (roundData: Round) => {
+    const label = formatRoundLabel(roundData);
+    return language === 'zh'
+      ? `${t.play.idlePrefix}${label}${t.play.idleSuffix}`
+      : `${t.play.idlePrefix} ${label} ${t.play.idleSuffix}`;
+  };
+
+  const formatCorrectPrompt = (roundData: Round) => {
+    const label = formatRoundLabel(roundData);
+    return language === 'zh'
+      ? `${t.play.correctPrefix}${roundData.targetCount}辆${label}车。`
+      : `${t.play.correctPrefix} ${roundData.targetCount} ${label.toLowerCase()} ${t.play.correctSuffix}`;
+  };
 
   const formatProgressPrompt = (roundData: Round) =>
     language === 'zh'
@@ -1033,7 +1078,7 @@ export function CarAdventureHero() {
                 {t.play.kicker}
               </p>
               <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
-                {formatFindPrompt(round?.targetColor)}
+                {formatFindPrompt(round)}
               </h1>
               <p className="mt-3 max-w-[580px] text-sm leading-6 opacity-70">
                 {t.play.instruction}
@@ -1104,7 +1149,7 @@ export function CarAdventureHero() {
 	                ) : round.result === 'wrong' ? (
 	                  t.play.wrong
 	                ) : (
-                  formatIdlePrompt(round.targetColor)
+                  formatIdlePrompt(round)
                 )}
               </div>
 
