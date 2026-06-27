@@ -1,586 +1,86 @@
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
-  Lock,
-  Menu,
-  RotateCcw,
-  Settings2,
-  Unlock,
-  X,
 } from 'lucide-react';
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { VEHICLES, Vehicle, VehicleColor, VehicleCategory } from './vehicleData';
-import { DEFAULT_V2, migrateV1toV2, readV2, writeV2, type StorageV2 } from './storage';
+import { VEHICLES, Vehicle } from './vehicleData';
+import {
+  View, Direction, CardRole, Language,
+  NOISE_BACKGROUND, HERO_SLIDES, HERO_VEHICLE_IDS, UI_TEXT, assetUrl,
+} from './constants';
+import { GameProvider, useGame } from './context/GameContext';
+import { Header } from './components/Header';
+import { PlayView } from './views/PlayView';
+import { GarageView } from './views/GarageView';
+import { ParentsView } from './views/ParentsView';
+import { RewardModal } from './components/RewardModal';
+import './styles.css';
 
-type View = 'home' | 'play' | 'garage' | 'parents';
-type Direction = 'next' | 'prev';
-type CardRole = 'center' | 'left' | 'right' | 'back' | 'hidden';
-type Language = 'en' | 'zh';
-type NavLabel = 'Start' | 'Games' | 'Garage' | 'Colors' | 'Parents';
-
-type HeroSlide = {
-  vehicleId: string;
-  title: string;
-  label: string;
-  ghostText: string;
-  description: string;
-  cta: string;
-};
-
-type QuestionType = 'color' | 'category' | 'mixed' | 'math';
-
-type MixedTarget = {
-  color?: VehicleColor;
-  category?: VehicleCategory;
-  count: number;
-};
-
-type Round = {
-  questionType: QuestionType;
-  targetColor?: VehicleColor;
-  targetCategory?: VehicleCategory;
-  mixedTargets?: MixedTarget[];
-  targetCount: number;
-  options: Vehicle[];
-  selectedIds: string[];
-  matchedTargets: number[];  // which mixedTarget index each selected vehicle matches
-  mathQuestion?: string;
-  mathChoices?: number[];
-  lastSelectedId: string | null;
-  result: 'idle' | 'progress' | 'correct' | 'wrong';
-};
-
-const COLOR_LABELS: Record<Language, Record<VehicleColor, string>> = {
-  en: {
-    red: 'Red',
-    blue: 'Blue',
-    yellow: 'Yellow',
-    green: 'Green',
-    white: 'White',
-    black: 'Black',
-    silver: 'Silver',
-    orange: 'Orange',
-    gray: 'Gray',
-    brown: 'Brown',
-    camouflage: 'Camo',
-    blackWhite: 'B&W',
-    other: 'Other',
-    unknown: 'Unmarked',
-  },
-  zh: {
-    red: '红色',
-    blue: '蓝色',
-    yellow: '黄色',
-    green: '绿色',
-    white: '白色',
-    black: '黑色',
-    silver: '银色',
-    orange: '橙色',
-    gray: '灰色',
-    brown: '棕色',
-    camouflage: '迷彩',
-    blackWhite: '黑白',
-    other: '其它',
-    unknown: '未标记',
-  },
-};
-
-const UI_TEXT = {
-  en: {
-    languageToggle: '中文',
-    nav: {
-      Start: 'Start',
-      Games: 'Games',
-      Garage: 'Garage',
-      Colors: 'Colors',
-      Parents: 'Parents',
-    },
-    heroSlides: [
-      {
-        title: 'Color Hunt',
-        label: 'FIND RED CARS',
-        description: 'Start a gentle color game with real toy vehicle pictures.',
-        cta: 'START GAME',
-      },
-      {
-        title: 'City Colors',
-        label: 'SPOT THE CITY CAR',
-        description: 'Look at each vehicle, name its color, and tap carefully.',
-        cta: 'START GAME',
-      },
-      {
-        title: 'Find the Bus',
-        label: 'TAP THE BUS',
-        description: 'Buses, cars, race cars, diggers, and planes can all appear.',
-        cta: 'START GAME',
-      },
-      {
-        title: 'Garage Star',
-        label: 'COLLECT VEHICLES',
-        description: 'Every marked vehicle can become part of the learning set.',
-        cta: 'MY GARAGE',
-      },
-    ],
-    play: {
-      kickerColor: 'Color game',
-      kickerCategory: 'Category game',
-      kickerMixed: 'Mixed game',
-      kickerMath: 'Math game',
-      find: 'Find',
-      fallbackColor: 'a color',
-      fallbackCategory: 'a category',
-      instructionColor: 'Look at the vehicles below. Tap every vehicle that matches the target color, then count them.',
-      instructionCategory: 'Look at the vehicles below. Tap every vehicle that matches the target category, then count them.',
-      instructionMixed: 'Look at the vehicles below. Find vehicles matching each target color or category.',
-      instructionMath: 'Count how many vehicles in total. Tap the correct number.',
-      score: 'Score',
-      newRound: 'New round',
-      idlePrefixColor: 'Tap a',
-      idleSuffixColor: 'vehicle.',
-      idlePrefixCategory: 'Tap a',
-      idleSuffixCategory: '.',
-      idleMixed: 'Tap vehicles that match the conditions.',
-      progressPrefix: 'Found',
-      progressMiddle: 'of',
-      progressSuffix: 'Keep looking.',
-      correctPrefixColor: 'Correct. There are',
-      correctSuffixColor: 'matching vehicles here.',
-      correctPrefixMixed: 'Correct. You found',
-      correctSuffixMixed: 'vehicles in total.',
-      wrong: 'Try again. Look for another vehicle with the target color.',
-    },
-    garage: {
-      kicker: 'Collection garage',
-      markedVehicles: 'marked vehicles',
-      editColors: 'Edit colors',
-    },
-    parents: {
-      kicker: 'Parent controls',
-      title: 'Mark vehicle colors',
-      description:
-        'This is the lightweight data layer: color tags are saved in this browser with localStorage. No account, no server, easy to revise.',
-      reset: 'Reset tags',
-      all: 'All',
-      mainColor: 'Main color',
-    },
-    aria: {
-      openMenu: 'Open menu',
-      closeMenu: 'Close menu',
-      previous: 'Previous game mode',
-      next: 'Next game mode',
-      switchLanguage: 'Switch language',
-    },
-  },
-  zh: {
-    languageToggle: 'EN',
-    nav: {
-      Start: '开始',
-      Games: '游戏',
-      Garage: '车库',
-      Colors: '颜色',
-      Parents: '家长',
-    },
-    heroSlides: [
-      {
-        title: '颜色找找看',
-        label: '找到红色车',
-        description: '用真实玩具车图片开始一局温和的颜色小游戏。',
-        cta: '开始游戏',
-      },
-      {
-        title: '城市颜色',
-        label: '找到城市小车',
-        description: '观察每一辆车，说出颜色，再轻轻点选。',
-        cta: '开始游戏',
-      },
-      {
-        title: '找到巴士',
-        label: '点击巴士',
-        description: '巴士、小汽车、赛车、工程车和飞机都可能出现。',
-        cta: '开始游戏',
-      },
-      {
-        title: '收藏车库',
-        label: '收集车辆',
-        description: '每辆已标记颜色的车，都可以进入孩子的学习素材库。',
-        cta: '我的车库',
-      },
-    ],
-    play: {
-      kickerColor: '颜色游戏',
-      kickerCategory: '类别游戏',
-      kickerMixed: '混合游戏',
-      kickerMath: '数学游戏',
-      find: '找到',
-      fallbackColor: '一种颜色',
-      fallbackCategory: '一种类别',
-      instructionColor: '看看下面的车辆，把所有符合目标颜色的车都点出来，然后数一数一共有几辆。',
-      instructionCategory: '看看下面的车辆，把所有符合目标类别的车都点出来，然后数一数一共有几辆。',
-      instructionMixed: '看看下面的车辆，找出符合每种目标颜色或类别的车。',
-      instructionMath: '算一算一共有多少辆车，点击正确的数字。',
-      score: '得分',
-      newRound: '换一题',
-      idlePrefixColor: '请点击一辆',
-      idleSuffixColor: '的车。',
-      idlePrefixCategory: '请点击一辆',
-      idleSuffixCategory: '。',
-      idleMixed: '请点击符合条件的车辆。',
-      progressPrefix: '已经找到',
-      progressMiddle: '辆，共',
-      progressSuffix: '辆，继续找。',
-      correctPrefixColor: '答对啦！这里有',
-      correctSuffixColor: '辆这种颜色的车。',
-      correctPrefixMixed: '答对啦！一共找到了',
-      correctSuffixMixed: '辆车。',
-      wrong: '再试一次，找找另一辆目标颜色的车。',
-    },
-    garage: {
-      kicker: '收藏车库',
-      markedVehicles: '辆已标记车辆',
-      editColors: '编辑颜色',
-    },
-    parents: {
-      kicker: '家长控制',
-      title: '标记车辆颜色',
-      description:
-        '这是轻量数据层：颜色标签保存在当前浏览器的 localStorage 中。无需账号、无需服务器，随时可以修改。',
-      reset: '重置标签',
-      all: '全部',
-      mainColor: '主颜色',
-    },
-    aria: {
-      openMenu: '打开菜单',
-      closeMenu: '关闭菜单',
-      previous: '上一个游戏模式',
-      next: '下一个游戏模式',
-      switchLanguage: '切换语言',
-    },
-  },
-} satisfies Record<Language, {
-  languageToggle: string;
-  nav: Record<NavLabel, string>;
-  heroSlides: Array<{ title: string; label: string; description: string; cta: string }>;
-  play: Record<string, string>;
-  garage: Record<string, string>;
-  parents: Record<string, string>;
-  aria: Record<string, string>;
-}>;
-
-const HERO_SLIDES: HeroSlide[] = [
-  {
-    vehicleId: '458',
-    title: 'Color Hunt',
-    label: 'FIND RED CARS',
-    ghostText: 'COLOR HUNT',
-    description: 'Start a gentle color game with real toy vehicle pictures.',
-    cta: 'START GAME',
-  },
-  {
-    vehicleId: 'a4',
-    title: 'City Colors',
-    label: 'SPOT THE CITY CAR',
-    ghostText: 'CITY CAR',
-    description: 'Look at each vehicle, name its color, and tap carefully.',
-    cta: 'START GAME',
-  },
-  {
-    vehicleId: 'vehicle-34',
-    title: 'Find the Bus',
-    label: 'TAP THE BUS',
-    ghostText: 'BIG BUS',
-    description: 'Buses, cars, race cars, diggers, and planes can all appear.',
-    cta: 'START GAME',
-  },
-  {
-    vehicleId: 'rb7',
-    title: 'Garage Star',
-    label: 'COLLECT VEHICLES',
-    ghostText: 'GARAGE',
-    description: 'Every marked vehicle can become part of the learning set.',
-    cta: 'MY GARAGE',
-  },
-];
-
-const HERO_VEHICLE_IDS = [
-  '458',
-  'a4',
-  'vehicle-34',
-  'rb7',
-  'countach',
-  '777',
-  'd11',
-  'g63',
-  'ae86',
-  'v4',
-  'cat-797',
-  'f40',
-  '250gto',
-  'f2004',
-  '312t',
-  'f1',
-  'mp4',
-  'vehicle-06',
-  'e-type',
-  'h1',
-];
-
-const NAV_ITEMS: Array<{ label: NavLabel; view: View }> = [
-  { label: 'Start', view: 'play' },
-  { label: 'Games', view: 'play' },
-  { label: 'Garage', view: 'garage' },
-  { label: 'Colors', view: 'play' },
-  { label: 'Parents', view: 'parents' },
-];
-
-const COLOR_OPTIONS: VehicleColor[] = [
-  'red',
-  'blue',
-  'yellow',
-  'green',
-  'white',
-  'black',
-  'silver',
-  'orange',
-  'gray',
-  'brown',
-  'camouflage',
-  'blackWhite',
-  'other',
-];
-const CATEGORY_OPTIONS: VehicleCategory[] = [
-  'car',
-  'race',
-  'bus',
-  'construction',
-  'motorcycle',
-  'tank',
-  'watercraft',
-  'offroad',
-  'aircraft',
-];
-const CATEGORY_LABELS: Record<Language, Record<VehicleCategory, string>> = {
-  en: {
-    car: 'Car',
-    race: 'Race',
-    bus: 'Bus',
-    construction: 'Construction',
-    motorcycle: 'Motorcycle',
-    tank: 'Tank',
-    watercraft: 'Watercraft',
-    offroad: 'Off-road',
-    aircraft: 'Aircraft',
-  },
-  zh: {
-    car: '汽车',
-    race: '赛车',
-    bus: '巴士',
-    construction: '工程车',
-    motorcycle: '摩托车',
-    tank: '坦克',
-    watercraft: '摩托艇',
-    offroad: '越野车',
-    aircraft: '飞机',
-  },
-};
-const GAME_COLORS: VehicleColor[] = ['red', 'blue', 'yellow', 'green', 'white', 'black'];
+// ── Card styles ──────────────────────────────────────────
 
 const CARD_TRANSITION =
   'transform 650ms cubic-bezier(0.4,0,0.2,1), filter 650ms cubic-bezier(0.4,0,0.2,1), opacity 650ms cubic-bezier(0.4,0,0.2,1), left 650ms cubic-bezier(0.4,0,0.2,1), bottom 650ms cubic-bezier(0.4,0,0.2,1), width 650ms cubic-bezier(0.4,0,0.2,1)';
 
-const NOISE_BACKGROUND =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E\")";
-
 function getVehicleByHint(hint: string) {
   const normalizedHint = hint.toLowerCase();
-  return VEHICLES.find((vehicle) => vehicle.id.toLowerCase() === normalizedHint) || VEHICLES.find(
-    (vehicle) =>
-      vehicle.id.toLowerCase().includes(normalizedHint) ||
-      vehicle.name.toLowerCase().includes(normalizedHint),
+  return VEHICLES.find((v) => v.id.toLowerCase() === normalizedHint) || VEHICLES.find(
+    (v) => v.id.toLowerCase().includes(normalizedHint) || v.name.toLowerCase().includes(normalizedHint),
   );
 }
 
-function assetUrl(path: string) {
-  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
-}
-
-const HERO_VEHICLES = HERO_VEHICLE_IDS.map((vehicleId) => getVehicleByHint(vehicleId)).filter(
-  Boolean,
-) as Vehicle[];
+const HERO_VEHICLES = HERO_VEHICLE_IDS.map((id) => getVehicleByHint(id)).filter(Boolean) as Vehicle[];
 
 function getVehicleImageStyle(role: CardRole): CSSProperties {
   const transform =
-    role === 'center'
-      ? 'scale(0.92)'
-      : role === 'left' || role === 'right'
-        ? 'translateY(-30%) scale(0.86)'
-        : 'scale(0.86)';
-
-  return {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-    userSelect: 'none',
-    transform,
-    transformOrigin: 'center center',
-  };
+    role === 'center' ? 'scale(0.92)'
+      : role === 'left' || role === 'right' ? 'translateY(-30%) scale(0.86)'
+      : 'scale(0.86)';
+  return { width: '100%', height: '100%', objectFit: 'contain', userSelect: 'none', transform, transformOrigin: 'center center' };
 }
 
 function getCardStyle(role: CardRole, isMobile: boolean): CSSProperties {
   const base: CSSProperties = {
-    position: 'absolute',
-    aspectRatio: '16 / 10',
-    overflow: 'visible',
-    transition: CARD_TRANSITION,
-    willChange: 'transform, filter, opacity, left, bottom, width',
+    position: 'absolute', aspectRatio: '16 / 10', overflow: 'visible',
+    transition: CARD_TRANSITION, willChange: 'transform, filter, opacity, left, bottom, width',
   };
-
-  if (role === 'center') {
-    return {
-      ...base,
-      left: '50%',
-      bottom: isMobile ? '27%' : 'max(11%, 126px)',
-      width: isMobile ? '81%' : 'min(60.72%, calc((100vh - 190px) * 1.75))',
-      transform: 'translateX(-50%) scale(1)',
-      filter: 'none',
-      opacity: 1,
-      zIndex: 20,
-    };
-  }
-
-  if (role === 'left') {
-    return {
-      ...base,
-      left: isMobile ? '18%' : '13.5%',
-      bottom: isMobile ? '20%' : '16%',
-      width: isMobile ? '22%' : '18.5%',
-      transform: 'translateX(-50%) scale(1)',
-      filter: 'blur(0.4px)',
-      opacity: 0.52,
-      zIndex: 6,
-    };
-  }
-
-  if (role === 'right') {
-    return {
-      ...base,
-      left: isMobile ? '82%' : '86.5%',
-      bottom: isMobile ? '20%' : '16%',
-      width: isMobile ? '22%' : '18.5%',
-      transform: 'translateX(-50%) scale(1)',
-      filter: 'blur(0.4px)',
-      opacity: 0.52,
-      zIndex: 6,
-    };
-  }
-
-  if (role === 'back') {
-    return {
-      ...base,
-      left: '50%',
-      bottom: isMobile ? '25%' : '17%',
-      width: isMobile ? '18%' : '14%',
-      transform: 'translate(-50%, 18%) scale(0.7)',
-      filter: 'blur(2px)',
-      opacity: 0,
-      zIndex: 1,
-    };
-  }
-
-  return {
-    ...base,
-    left: '50%',
-    bottom: isMobile ? '27%' : '21%',
-    width: isMobile ? '32%' : '20%',
-    transform: 'translateX(-50%) scale(0.58)',
-    filter: 'blur(5px)',
-    opacity: 0,
-    zIndex: 1,
-  };
+  if (role === 'center') return { ...base, left: '50%', bottom: isMobile ? '27%' : 'max(11%, 126px)', width: isMobile ? '81%' : 'min(60.72%, calc((100vh - 190px) * 1.75))', transform: 'translateX(-50%) scale(1)', filter: 'none', opacity: 1, zIndex: 20 };
+  if (role === 'left') return { ...base, left: isMobile ? '18%' : '13.5%', bottom: isMobile ? '20%' : '16%', width: isMobile ? '22%' : '18.5%', transform: 'translateX(-50%) scale(1)', filter: 'blur(0.4px)', opacity: 0.52, zIndex: 6 };
+  if (role === 'right') return { ...base, left: isMobile ? '82%' : '86.5%', bottom: isMobile ? '20%' : '16%', width: isMobile ? '22%' : '18.5%', transform: 'translateX(-50%) scale(1)', filter: 'blur(0.4px)', opacity: 0.52, zIndex: 6 };
+  if (role === 'back') return { ...base, left: '50%', bottom: isMobile ? '25%' : '17%', width: isMobile ? '18%' : '14%', transform: 'translate(-50%, 18%) scale(0.7)', filter: 'blur(2px)', opacity: 0, zIndex: 1 };
+  return { ...base, left: '50%', bottom: isMobile ? '27%' : '21%', width: isMobile ? '32%' : '20%', transform: 'translateX(-50%) scale(0.58)', filter: 'blur(5px)', opacity: 0, zIndex: 1 };
 }
 
-function sample<T>(items: T[], count: number) {
-  const pool = [...items];
-  const picked: T[] = [];
-  while (pool.length && picked.length < count) {
-    const index = Math.floor(Math.random() * pool.length);
-    picked.push(pool.splice(index, 1)[0]);
-  }
-  return picked;
-}
+// ── Home View ────────────────────────────────────────────
 
-function shuffle<T>(items: T[]) {
-  return sample(items, items.length);
-}
-
-export function CarAdventureHero() {
-  const [view, setView] = useState<View>('home');
-  const [language, setLanguage] = useState<Language>('en');
+function HomeView() {
+  const { openView, language } = useGame();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [storage, setStorage] = useState<StorageV2>(() => {
-    migrateV1toV2();
-    return readV2();
-  });
-  const [round, setRound] = useState<Round | null>(null);
-  const [score, setScore] = useState(0);
-  const [showReward, setShowReward] = useState<string | null>(null);
-  const [showAllCollected, setShowAllCollected] = useState(false);
-  const [zoomedCard, setZoomedCard] = useState<string | null>(null);
-  const [zoomAnimating, setZoomAnimating] = useState(false);
-  const [parentFilter, setParentFilter] = useState<'all' | VehicleColor | VehicleCategory>('all');
   const animationTimer = useRef<number | null>(null);
   const autoPausedUntil = useRef(0);
   const isAnimatingRef = useRef(false);
 
+  const totalHeroItems = HERO_VEHICLES.length;
   const activeSlide = HERO_SLIDES[activeIndex % HERO_SLIDES.length] || HERO_SLIDES[0];
   const t = UI_TEXT[language];
-  const activeSlideText =
-    t.heroSlides[activeIndex % t.heroSlides.length] || t.heroSlides[0];
+  const activeSlideText = t.heroSlides[activeIndex % t.heroSlides.length] || t.heroSlides[0];
   const activeHeroVehicle = HERO_VEHICLES[activeIndex] || VEHICLES[0];
-  const totalHeroItems = HERO_VEHICLES.length;
-  const colorLabel = useCallback(
-    (color: VehicleColor) => COLOR_LABELS[language][color],
-    [language],
-  );
 
-  const colorForVehicle = useCallback(
-    (vehicle: Vehicle): VehicleColor =>
-      storage.colorOverrides[vehicle.id] || vehicle.color,
-    [storage.colorOverrides],
-  );
+  const positions = useMemo(() => ({
+    center: activeIndex,
+    left: (activeIndex + totalHeroItems - 1) % totalHeroItems,
+    right: (activeIndex + 1) % totalHeroItems,
+    back: (activeIndex + 2) % totalHeroItems,
+  }), [activeIndex, totalHeroItems]);
 
-  const categoryForVehicle = useCallback(
-    (vehicle: Vehicle): VehicleCategory =>
-      storage.categoryOverrides[vehicle.id] || vehicle.category,
-    [storage.categoryOverrides],
-  );
-
-  const markedVehicles = useMemo(
-    () => VEHICLES.filter((vehicle) => colorForVehicle(vehicle) !== 'unknown'),
-    [colorForVehicle],
-  );
-
-  const colorCounts = useMemo(() => {
-    const counts = new Map<VehicleColor, number>();
-    markedVehicles.forEach((vehicle) => {
-      const color = colorForVehicle(vehicle);
-      counts.set(color, (counts.get(color) || 0) + 1);
-    });
-    return counts;
-  }, [colorForVehicle, markedVehicles]);
-
-  const positions = useMemo(
-    () => ({
-      center: activeIndex,
-      left: (activeIndex + totalHeroItems - 1) % totalHeroItems,
-      right: (activeIndex + 1) % totalHeroItems,
-      back: (activeIndex + 2) % totalHeroItems,
-    }),
-    [activeIndex, totalHeroItems],
-  );
+  const roleForIndex = (index: number): CardRole => {
+    if (index === positions.center) return 'center';
+    if (index === positions.left) return 'left';
+    if (index === positions.right) return 'right';
+    if (index === positions.back) return 'back';
+    return 'hidden';
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
@@ -589,37 +89,14 @@ export function CarAdventureHero() {
   }, []);
 
   useEffect(() => {
-    const preloadedImages = VEHICLES.map((vehicle) => {
-      const image = new Image();
-      image.src = assetUrl(vehicle.image);
-      return image;
-    });
-
     return () => {
-      preloadedImages.forEach((image) => {
-        image.src = '';
-      });
-    };
-  }, []);
-
-  useEffect(() => {
-    writeV2(storage);
-  }, [storage]);
-
-  useEffect(() => {
-    return () => {
-      if (animationTimer.current) {
-        window.clearTimeout(animationTimer.current);
-      }
+      if (animationTimer.current) window.clearTimeout(animationTimer.current);
       isAnimatingRef.current = false;
     };
   }, []);
 
   const releaseAnimationLock = useCallback(() => {
-    if (animationTimer.current) {
-      window.clearTimeout(animationTimer.current);
-    }
-
+    if (animationTimer.current) window.clearTimeout(animationTimer.current);
     animationTimer.current = window.setTimeout(() => {
       isAnimatingRef.current = false;
       setIsAnimating(false);
@@ -634,13 +111,10 @@ export function CarAdventureHero() {
     (direction: Direction, userInitiated = true) => {
       if (isAnimatingRef.current) return;
       if (userInitiated) pauseAutoRotation();
-
       isAnimatingRef.current = true;
       setIsAnimating(true);
-      setActiveIndex((previous) =>
-        direction === 'next'
-          ? (previous + 1) % totalHeroItems
-          : (previous + totalHeroItems - 1) % totalHeroItems,
+      setActiveIndex((prev) =>
+        direction === 'next' ? (prev + 1) % totalHeroItems : (prev + totalHeroItems - 1) % totalHeroItems,
       );
       releaseAnimationLock();
     },
@@ -648,1139 +122,103 @@ export function CarAdventureHero() {
   );
 
   useEffect(() => {
-    if (view !== 'home') return undefined;
-
     const autoTimer = window.setInterval(() => {
       if (Date.now() < autoPausedUntil.current) return;
       navigateHero('next', false);
     }, 2000);
-
     return () => window.clearInterval(autoTimer);
-  }, [navigateHero, view]);
+  }, [navigateHero]);
 
-  const createRound = useCallback(
-    () => {
-      // Randomly pick question type
-      const availableColors = GAME_COLORS.filter((color) => (colorCounts.get(color) || 0) > 0);
-      const categoriesWithCounts = CATEGORY_OPTIONS.filter((cat) => {
-        const count = markedVehicles.filter((v) => categoryForVehicle(v) === cat).length;
-        return count > 0;
-      });
-      const canDoColor = availableColors.length > 0;
-      const canDoCategory = categoriesWithCounts.length > 0;
-      const canDoMixed = canDoColor && canDoCategory;
-      const canDoMath = storage.collectedCards.length >= 3;
-      const roll = Math.random();
-      const useMath = canDoMath && roll < 0.15;
-      const useMixed = !useMath && canDoMixed && roll < 0.30;
-      const useCategory = !useMath && !useMixed && canDoCategory && (!canDoColor || Math.random() < 0.4);
+  return (
+    <main className="relative min-h-[100dvh] overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-x-0 flex select-none items-center justify-center"
+        data-hero-ghost
+        style={{
+          zIndex: 2, top: isMobile ? '8%' : '5%', fontFamily: "'Anton', sans-serif",
+          fontSize: 'clamp(42px, 10.8vw, 168px)', fontWeight: 400, lineHeight: 1,
+          textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap',
+        }}
+      >
+        <span style={{ color: '#202A36', opacity: 0.12, textShadow: '0 14px 34px rgba(32,42,54,0.14)' }}>HELLO! MY BABY</span>
+        <span className="ml-[0.08em] -rotate-3" style={{ color: '#54E84D', fontFamily: "'Comic Sans MS', 'Marker Felt', cursive", fontSize: '1.04em', fontWeight: 900, opacity: 0.28, textShadow: '0 10px 28px rgba(84,232,77,0.22)', textTransform: 'none' }}>Anpu</span>
+      </div>
 
-      if (useMath) {
-        // Math question: addition or subtraction based on collected vehicle counts
-        const collectedVehicles = VEHICLES.filter((v) => storage.collectedCards.includes(v.id));
-        const collectedByColor = new Map<VehicleColor, Vehicle[]>();
-        collectedVehicles.forEach((v) => {
-          const c = colorForVehicle(v);
-          if (!collectedByColor.has(c)) collectedByColor.set(c, []);
-          collectedByColor.get(c)!.push(v);
-        });
-        const colorEntries = Array.from(collectedByColor.entries()).filter(([, vs]) => vs.length >= 1);
-
-        let a: number, b: number, answer: number;
-        let questionText: string;
-        const isAddition = Math.random() < 0.6;
-
-        if (isAddition && colorEntries.length >= 2) {
-          const [c1, v1] = colorEntries[Math.floor(Math.random() * colorEntries.length)];
-          const remaining = colorEntries.filter(([c]) => c !== c1);
-          const [c2, v2] = remaining[Math.floor(Math.random() * remaining.length)];
-          a = Math.min(v1.length, 5);
-          b = Math.min(v2.length, 3);
-          answer = a + b;
-          questionText = language === 'zh'
-            ? `${a}辆${colorLabel(c1)} + ${b}辆${colorLabel(c2)} = ?`
-            : `${a} ${colorLabel(c1)} + ${b} ${colorLabel(c2)} = ?`;
-        } else {
-          const [c1, v1] = colorEntries[Math.floor(Math.random() * colorEntries.length)];
-          a = Math.min(v1.length, 8);
-          b = Math.floor(Math.random() * Math.min(a, 3)) + 1;
-          answer = a - b;
-          questionText = language === 'zh'
-            ? `${a}辆${colorLabel(c1)}，开走${b}辆 = ?`
-            : `${a} ${colorLabel(c1)}, ${b} leave = ?`;
-        }
-
-        // Generate answer choices (correct + 3 distractors)
-        const choices = new Set<number>([answer]);
-        while (choices.size < 4) {
-          const offset = Math.floor(Math.random() * 5) - 2;
-          const c = answer + offset;
-          if (c >= 0 && c <= 10) choices.add(c);
-        }
-
-        setRound({
-          questionType: 'math',
-          targetCount: answer,
-          mathQuestion: questionText,
-          mathChoices: shuffle(Array.from(choices)),
-          options: [],
-          selectedIds: [],
-          matchedTargets: [],
-          lastSelectedId: null,
-          result: 'idle',
-        });
-      } else if (useMixed) {
-        // Mixed question: randomly pick type A (multi-color) or type B (color+category cross)
-        const isCrossType = Math.random() < 0.5;
-        let mixedTargets: MixedTarget[];
-
-        if (isCrossType) {
-          // Type B: find vehicles matching color AND category (e.g. "红色的赛车")
-          const targetColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-          const crossPool = markedVehicles.filter(
-            (v) => colorForVehicle(v) === targetColor,
+      <div className="absolute inset-0 z-[3]" aria-label="Vehicle cutout carousel">
+        {HERO_VEHICLES.map((vehicle, index) => {
+          const role = roleForIndex(index);
+          return (
+            <article key={vehicle.id} data-hero-role={role} data-vehicle-id={vehicle.id} aria-hidden={role !== 'center'} className="flex items-center justify-center" style={getCardStyle(role, isMobile)}>
+              <img alt={vehicle.name} draggable={false} loading={index < 4 ? 'eager' : 'lazy'} style={getVehicleImageStyle(role)} src={assetUrl(vehicle.image)} />
+            </article>
           );
-          const availableCatsForColor = CATEGORY_OPTIONS.filter((cat) =>
-            crossPool.some((v) => categoryForVehicle(v) === cat),
-          );
-          if (availableCatsForColor.length === 0) {
-            // Fallback: just do a color question instead
-            setRound({
-              questionType: 'color',
-              targetColor,
-              targetCount: Math.floor(Math.random() * Math.min(crossPool.length, 5)) + 1,
-              options: sample(shuffle([...crossPool]), 8),
-              selectedIds: [],
-              matchedTargets: [],
-              lastSelectedId: null,
-              result: 'idle',
-            });
-            return;
-          }
-          const targetCategory = availableCatsForColor[Math.floor(Math.random() * availableCatsForColor.length)];
-          const matchPool = crossPool.filter((v) => categoryForVehicle(v) === targetCategory);
-          const maxCount = Math.min(matchPool.length, 3);
-          const targetCount = Math.floor(Math.random() * maxCount) + 1;
-          mixedTargets = [{ color: targetColor, category: targetCategory, count: targetCount }];
-        } else {
-          // Type A: multi-color (e.g. "找2辆红色 + 1辆蓝色")
-          const shuffled = shuffle([...availableColors]);
-          const c1 = shuffled[0];
-          const c2 = shuffled.length > 1 ? shuffled[1] : c1;
-          const pool1 = markedVehicles.filter((v) => colorForVehicle(v) === c1);
-          const pool2 = markedVehicles.filter((v) => colorForVehicle(v) === c2 && v.id !== pool1[0]?.id);
-          const cnt1 = Math.min(pool1.length, 2);
-          const cnt2 = Math.min(pool2.length, 2);
-          mixedTargets = [
-            { color: c1, count: Math.max(1, cnt1) },
-            { color: c2, count: Math.max(1, cnt2) },
-          ];
-        }
+        })}
+      </div>
 
-        const totalTargetCount = mixedTargets.reduce((sum, t) => sum + t.count, 0);
-        const actualTargets: Vehicle[] = [];
-        const usedIds = new Set<string>();
-        mixedTargets.forEach((t) => {
-          const matching = markedVehicles.filter((v) => {
-            if (usedIds.has(v.id)) return false;
-            if (t.color && t.category) return colorForVehicle(v) === t.color && categoryForVehicle(v) === t.category;
-            if (t.color) return colorForVehicle(v) === t.color;
-            return false;
-          });
-          const picked = sample(matching, t.count);
-          picked.forEach((v) => usedIds.add(v.id));
-          actualTargets.push(...picked);
-        });
-        const distractorPool = markedVehicles.filter((v) => !usedIds.has(v.id));
-        const distractors = sample(distractorPool, Math.max(0, 8 - actualTargets.length));
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-[30] w-[12vw]" style={{ background: 'linear-gradient(to right, rgba(248,244,244,0.98), rgba(248,244,244,0))' }} />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-[30] w-[12vw]" style={{ background: 'linear-gradient(to left, rgba(248,244,244,0.98), rgba(248,244,244,0))' }} />
 
-        setRound({
-          questionType: 'mixed',
-          mixedTargets,
-          targetCount: totalTargetCount,
-          options: shuffle([...actualTargets, ...distractors]).slice(0, 8),
-          selectedIds: [],
-          matchedTargets: [],
-          lastSelectedId: null,
-          result: 'idle',
-        });
-      } else if (useCategory) {
-        // Category question: find vehicles of a specific category
-        const targetCategory = categoriesWithCounts[Math.floor(Math.random() * categoriesWithCounts.length)];
-        const targetPool = markedVehicles.filter((vehicle) => categoryForVehicle(vehicle) === targetCategory);
-        const distractorPool = markedVehicles.filter((vehicle) => categoryForVehicle(vehicle) !== targetCategory);
-        const maxTargetCount = Math.min(targetPool.length, 5);
-        const targetCount = Math.floor(Math.random() * maxTargetCount) + 1;
-        const targetVehicles = sample(targetPool, targetCount);
-        const distractors = sample(distractorPool, Math.max(0, 8 - targetVehicles.length));
-        const options = shuffle([...targetVehicles, ...distractors]).slice(0, 8);
+      <section className="absolute bottom-4 left-4 z-[60] max-w-[360px] sm:bottom-10 sm:left-24">
+        <h1 className="mb-2 text-base font-extrabold uppercase tracking-widest opacity-95 sm:text-[24px]">{activeSlideText.title}</h1>
+        <p className="mb-5 hidden text-xs leading-[1.65] opacity-70 sm:block sm:text-sm">{activeSlideText.description}</p>
+        <div className="mb-4 flex items-center gap-2">
+          {HERO_SLIDES.map((slide, index) => (
+            <span key={slide.title} className="h-2 rounded-full transition-all duration-[650ms]" style={{ width: index === activeIndex % HERO_SLIDES.length ? '32px' : '8px', backgroundColor: '#202A36', opacity: index === activeIndex % HERO_SLIDES.length ? 0.9 : 0.24 }} />
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#202A36]/75 bg-white/45 backdrop-blur transition-[transform,background-color] duration-150 hover:scale-[1.08] hover:bg-white/80 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:h-16 sm:w-16" type="button" aria-label={t.aria.previous} onClick={() => navigateHero('prev')}>
+            <ArrowLeft size={26} strokeWidth={2.25} />
+          </button>
+          <button className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#202A36]/75 bg-white/45 backdrop-blur transition-[transform,background-color] duration-150 hover:scale-[1.08] hover:bg-white/80 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:h-16 sm:w-16" type="button" aria-label={t.aria.next} onClick={() => navigateHero('next')}>
+            <ArrowRight size={26} strokeWidth={2.25} />
+          </button>
+        </div>
+      </section>
 
-        setRound({
-          questionType: 'category',
-          targetCategory,
-          targetCount: targetVehicles.length,
-          options,
-          selectedIds: [],
-          matchedTargets: [],
-          lastSelectedId: null,
-          result: 'idle',
-        });
-      } else {
-        // Color question (existing logic)
-        const targetColor = availableColors[Math.floor(Math.random() * availableColors.length)] || 'red';
-        const targetPool = markedVehicles.filter((vehicle) => colorForVehicle(vehicle) === targetColor);
-        const distractorPool = markedVehicles.filter(
-          (vehicle) => colorForVehicle(vehicle) !== targetColor,
-        );
-        const maxTargetCount = Math.min(targetPool.length, 5);
-        const targetCount = Math.floor(Math.random() * maxTargetCount) + 1;
-        const targetVehicles = sample(targetPool, targetCount);
-        const distractors = sample(distractorPool, Math.max(0, 8 - targetVehicles.length));
-        const options = shuffle([...targetVehicles, ...distractors]).slice(0, 8);
+      <button
+        className="absolute bottom-4 right-4 z-[60] flex items-center gap-2 font-display uppercase leading-none opacity-95 transition-opacity duration-200 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:bottom-10 sm:right-10 sm:gap-3"
+        type="button"
+        onClick={() => openView(activeSlide.cta === 'MY GARAGE' ? 'garage' : 'play')}
+        style={{ fontFamily: "'Anton', sans-serif", fontSize: 'clamp(22px, 4vw, 58px)', fontWeight: 400, letterSpacing: 0 }}
+      >
+        <span>{activeSlideText.cta}</span>
+        <ArrowRight className="h-5 w-5 sm:h-8 sm:w-8" strokeWidth={2.25} />
+      </button>
 
-        setRound({
-          questionType: 'color',
-          targetColor,
-          targetCount: targetVehicles.length,
-          options,
-          selectedIds: [],
-          matchedTargets: [],
-          lastSelectedId: null,
-          result: 'idle',
-        });
-      }
-    },
-    [categoryForVehicle, colorCounts, colorForVehicle, markedVehicles],
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[40] h-36" style={{ background: 'linear-gradient(to top, rgba(248,244,244,0.96), rgba(248,244,244,0))' }} />
+    </main>
   );
+}
 
-  const openView = useCallback(
-    (nextView: View) => {
-      pauseAutoRotation();
-      setIsMenuOpen(false);
-      setView(nextView);
-      if (nextView === 'play') {
-        createRound();
-      }
-    },
-    [createRound, pauseAutoRotation],
-  );
+// ── App Shell ────────────────────────────────────────────
 
-  const handleVehiclePick = useCallback(
-    (vehicle: Vehicle) => {
-      if (!round || round.result === 'correct') return;
+function AppShell() {
+  const { view } = useGame();
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-      const isCorrect = round.questionType === 'mixed'
-        ? (() => {
-            if (!round.mixedTargets) return false;
-            // Check if vehicle matches any target that still needs more vehicles
-            for (let i = 0; i < round.mixedTargets.length; i++) {
-              const t = round.mixedTargets[i];
-              const alreadyMatched = round.matchedTargets.filter((m) => m === i).length;
-              if (alreadyMatched >= t.count) continue;
-              if (t.color && t.category) {
-                if (colorForVehicle(vehicle) === t.color && categoryForVehicle(vehicle) === t.category) return true;
-              } else if (t.color) {
-                if (colorForVehicle(vehicle) === t.color) return true;
-              }
-            }
-            return false;
-          })()
-        : round.questionType === 'category'
-          ? categoryForVehicle(vehicle) === round.targetCategory
-          : colorForVehicle(vehicle) === round.targetColor;
-      if (isCorrect && round.selectedIds.includes(vehicle.id)) {
-        return;
-      }
-
-      const selectedIds = isCorrect ? [...round.selectedIds, vehicle.id] : round.selectedIds;
-      let matchedTargetIndex = -1;
-      if (isCorrect && round.questionType === 'mixed' && round.mixedTargets) {
-        for (let i = 0; i < round.mixedTargets.length; i++) {
-          const t = round.mixedTargets[i];
-          const alreadyMatched = round.matchedTargets.filter((m) => m === i).length;
-          if (alreadyMatched >= t.count) continue;
-          if (t.color && t.category) {
-            if (colorForVehicle(vehicle) === t.color && categoryForVehicle(vehicle) === t.category) { matchedTargetIndex = i; break; }
-          } else if (t.color) {
-            if (colorForVehicle(vehicle) === t.color) { matchedTargetIndex = i; break; }
-          }
-        }
-      }
-      const newMatchedTargets = matchedTargetIndex >= 0
-        ? [...round.matchedTargets, matchedTargetIndex]
-        : round.matchedTargets;
-
-      const result = !isCorrect
-        ? 'wrong'
-        : selectedIds.length >= round.targetCount
-          ? 'correct'
-          : 'progress';
-
-      setRound({
-        ...round,
-        selectedIds,
-        matchedTargets: newMatchedTargets,
-        lastSelectedId: vehicle.id,
-        result,
-      });
-
-      if (result === 'correct') {
-        setScore((value) => value + 1);
-        const newStreak = storage.streak + 1;
-        setStorage((prev) => ({ ...prev, streak: newStreak }));
-        if (newStreak % 5 === 0) {
-          const uncollected = markedVehicles
-            .filter((v) => !storage.collectedCards.includes(v.id))
-            .map((v) => v.id);
-          if (uncollected.length > 0) {
-            const rewardId = uncollected[Math.floor(Math.random() * uncollected.length)];
-            setShowReward(rewardId);
-            setStorage((prev) => ({
-              ...prev,
-              collectedCards: [...prev.collectedCards, rewardId],
-            }));
-          } else {
-            setShowAllCollected(true);
-          }
-        }
-      }
-      if (!isCorrect) {
-        setStorage((prev) => ({ ...prev, streak: 0 }));
-      }
-    },
-    [colorForVehicle, round],
-  );
-
-  const updateVehicleColor = useCallback((vehicleId: string, color: VehicleColor) => {
-    setStorage((prev) => ({
-      ...prev,
-      colorOverrides: { ...prev.colorOverrides, [vehicleId]: color },
-    }));
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const updateVehicleCategory = useCallback((vehicleId: string, category: VehicleCategory) => {
-    setStorage((prev) => ({
-      ...prev,
-      categoryOverrides: { ...prev.categoryOverrides, [vehicleId]: category },
-    }));
-  }, []);
-
-  const toggleLockColor = useCallback((vehicleId: string) => {
-    setStorage((prev) => ({
-      ...prev,
-      lockedColors: { ...prev.lockedColors, [vehicleId]: !prev.lockedColors[vehicleId] },
-    }));
-  }, []);
-
-  const toggleLockCategory = useCallback((vehicleId: string) => {
-    setStorage((prev) => ({
-      ...prev,
-      lockedCategories: { ...prev.lockedCategories, [vehicleId]: !prev.lockedCategories[vehicleId] },
-    }));
-  }, []);
-
-  const roleForIndex = (index: number): CardRole => {
-    if (index === positions.center) return 'center';
-    if (index === positions.left) return 'left';
-    if (index === positions.right) return 'right';
-    if (index === positions.back) return 'back';
-    return 'hidden';
-  };
-
-  const parentVehicles = useMemo(() => {
-    if (parentFilter === 'all') return VEHICLES;
-    if (COLOR_OPTIONS.includes(parentFilter as VehicleColor)) {
-      return VEHICLES.filter((vehicle) => colorForVehicle(vehicle) === parentFilter);
-    }
-    return VEHICLES.filter((vehicle) => categoryForVehicle(vehicle) === parentFilter);
-  }, [colorForVehicle, categoryForVehicle, parentFilter]);
-
-  const formatRoundLabel = (roundData: Round) => {
-    if (roundData.questionType === 'mixed' && roundData.mixedTargets) {
-      const parts = roundData.mixedTargets.map((t) => {
-        let label = '';
-        if (t.color) label += colorLabel(t.color);
-        if (t.category) label += (label ? ' ' : '') + CATEGORY_LABELS[language][t.category];
-        return `${t.count} ${label}`;
-      });
-      return parts.join(' + ');
-    }
-    if (roundData.questionType === 'category' && roundData.targetCategory) {
-      const catLabel = CATEGORY_LABELS[language][roundData.targetCategory];
-      return language === 'zh' ? `${catLabel}` : catLabel;
-    }
-    return roundData.targetColor ? colorLabel(roundData.targetColor) : t.play.fallbackColor;
-  };
-
-  const formatFindPrompt = (roundData: Round | null) => {
-    if (!roundData) return `${t.play.find} ${t.play.fallbackColor}`;
-    const label = formatRoundLabel(roundData);
-    return language === 'zh' ? `${t.play.find}${label}` : `${t.play.find} ${label}`;
-  };
-
-  const formatIdlePrompt = (roundData: Round) => {
-    if (roundData.questionType === 'mixed') return t.play.idleMixed;
-    if (roundData.questionType === 'math') return '';
-    const prefix = roundData.questionType === 'category' ? t.play.idlePrefixCategory : t.play.idlePrefixColor;
-    const suffix = roundData.questionType === 'category' ? t.play.idleSuffixCategory : t.play.idleSuffixColor;
-    const label = formatRoundLabel(roundData);
-    const isCategory = roundData.questionType === 'category';
-    return language === 'zh'
-      ? `${prefix}${label}${suffix}`
-      : isCategory ? `${prefix} ${label}${suffix}` : `${prefix} ${label} ${suffix}`;
-  };
-
-  const formatCorrectPrompt = (roundData: Round) => {
-    const label = formatRoundLabel(roundData);
-    if (roundData.questionType === 'mixed') {
-      return language === 'zh'
-        ? `${t.play.correctPrefixMixed}${roundData.targetCount}${t.play.correctSuffixMixed}`
-        : `${t.play.correctPrefixMixed} ${roundData.targetCount} ${t.play.correctSuffixMixed}`;
-    }
-    return language === 'zh'
-      ? `${t.play.correctPrefixColor}${roundData.targetCount}辆${label}车。`
-      : `${t.play.correctPrefixColor} ${roundData.targetCount} ${label.toLowerCase()} ${t.play.correctSuffixColor}`;
-  };
-
-  const formatProgressPrompt = (roundData: Round) =>
-    language === 'zh'
-      ? `${t.play.progressPrefix}${roundData.selectedIds.length}${t.play.progressMiddle}${roundData.targetCount}${t.play.progressSuffix}`
-      : `${t.play.progressPrefix} ${roundData.selectedIds.length} ${t.play.progressMiddle} ${roundData.targetCount}. ${t.play.progressSuffix}`;
-
-  const handleMathPick = useCallback((n: number) => {
-    if (!round || round.result === 'correct') return;
-    const correct = n === round.targetCount;
-    setRound({ ...round, lastSelectedId: String(n), result: correct ? 'correct' : 'wrong' });
-    if (correct) {
-      setScore((v) => v + 1);
-      const newStreak = storage.streak + 1;
-      setStorage((prev) => ({ ...prev, streak: newStreak }));
-      if (newStreak % 5 === 0) {
-        const collectedIds = new Set(storage.collectedCards);
-        const uncollected = markedVehicles.filter((v) => !collectedIds.has(v.id)).map((v) => v.id);
-        if (uncollected.length > 0) {
-          const rewardId = uncollected[Math.floor(Math.random() * uncollected.length)];
-          setShowReward(rewardId);
-          setStorage((prev) => ({ ...prev, collectedCards: [...prev.collectedCards, rewardId] }));
-        } else {
-          setShowAllCollected(true);
-        }
-      }
-    } else {
-      setStorage((prev) => ({ ...prev, streak: 0 }));
-    }
-  }, [round, storage.streak, storage.collectedCards, markedVehicles]);
 
   return (
     <div className="min-h-[100dvh] bg-[#F8F4F4] font-sans text-[#202A36]">
       <div className="pointer-events-none fixed inset-0 z-[1] opacity-20 mix-blend-soft-light">
-        <div
-          className="h-full w-full"
-          style={{
-            backgroundImage: NOISE_BACKGROUND,
-            backgroundSize: '200px 200px',
-            backgroundRepeat: 'repeat',
-          }}
-        />
+        <div className="h-full w-full" style={{ backgroundImage: NOISE_BACKGROUND, backgroundSize: '200px 200px', backgroundRepeat: 'repeat' }} />
       </div>
 
-      <header className="fixed left-0 right-0 top-0 z-[90] px-4 py-5 sm:px-8">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-6">
-          <button
-            className="text-left text-xs font-extrabold uppercase tracking-[0.16em] opacity-90 outline-none transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:text-sm"
-            type="button"
-            onClick={() => openView('home')}
-          >
-            CAR CAR ADVENTURE
-          </button>
+      <Header isMobile={isMobile} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
 
-          <div className="flex items-center gap-3 md:gap-8">
-            <nav className="hidden gap-8 md:flex" aria-label="Desktop menu">
-              {NAV_ITEMS.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  className={`text-sm font-bold uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 ${
-                    view === item.view ? 'text-[#202A36]' : 'text-[#202A36]/62 hover:text-[#202A36]'
-                  }`}
-                  onClick={() => openView(item.view)}
-                >
-                  {t.nav[item.label]}
-                </button>
-              ))}
-            </nav>
+      {view === 'home' && <HomeView />}
+      {view === 'play' && <PlayView />}
+      {view === 'garage' && <GarageView />}
+      {view === 'parents' && <ParentsView />}
 
-            <button
-              className="rounded-full border border-[#202A36]/15 bg-white/55 px-3 py-2 text-xs font-extrabold uppercase tracking-[0.14em] backdrop-blur transition-transform active:scale-95"
-              type="button"
-              aria-label={t.aria.switchLanguage}
-              onClick={() => setLanguage((current) => (current === 'en' ? 'zh' : 'en'))}
-            >
-              {t.languageToggle}
-            </button>
+      <RewardModal />
 
-            <button
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#202A36]/15 bg-white/60 backdrop-blur transition-transform active:scale-95 md:hidden"
-              type="button"
-              aria-label={isMenuOpen ? t.aria.closeMenu : t.aria.openMenu}
-              aria-expanded={isMenuOpen}
-              onClick={() => setIsMenuOpen((open) => !open)}
-            >
-              {isMenuOpen ? <X size={24} strokeWidth={2.25} /> : <Menu size={24} strokeWidth={2.25} />}
-            </button>
-          </div>
-        </div>
-
-        {isMenuOpen && (
-          <nav
-            className="mx-auto mt-4 flex max-w-[1440px] flex-col gap-3 rounded-3xl border border-[#202A36]/10 bg-[#F8F4F4]/95 p-5 backdrop-blur-md md:hidden"
-            aria-label="Mobile menu"
-          >
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                className="rounded-2xl px-4 py-3 text-left text-base font-extrabold uppercase tracking-[0.14em] transition-colors hover:bg-white/60"
-                onClick={() => openView(item.view)}
-              >
-                {t.nav[item.label]}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="rounded-2xl border border-[#202A36]/15 bg-white/45 px-4 py-3 text-left text-base font-extrabold uppercase tracking-[0.14em]"
-              onClick={() => setLanguage((current) => (current === 'en' ? 'zh' : 'en'))}
-            >
-              {t.aria.switchLanguage}: {t.languageToggle}
-            </button>
-          </nav>
-        )}
-      </header>
-
-      {view === 'home' && (
-        <main className="relative min-h-[100dvh] overflow-hidden">
-          <div
-            className="pointer-events-none absolute inset-x-0 flex select-none items-center justify-center"
-            data-hero-ghost
-            style={{
-              zIndex: 2,
-              top: isMobile ? '8%' : '5%',
-              fontFamily: "'Anton', sans-serif",
-              fontSize: 'clamp(42px, 10.8vw, 168px)',
-              fontWeight: 400,
-              lineHeight: 1,
-              textTransform: 'uppercase',
-              letterSpacing: 0,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span
-              style={{
-                color: '#202A36',
-                opacity: 0.12,
-                textShadow: '0 14px 34px rgba(32,42,54,0.14)',
-              }}
-            >
-              HELLO! MY BABY
-            </span>
-            <span
-              className="ml-[0.08em] -rotate-3"
-              style={{
-                color: '#54E84D',
-                fontFamily: "'Comic Sans MS', 'Marker Felt', cursive",
-                fontSize: '1.04em',
-                fontWeight: 900,
-                opacity: 0.28,
-                textShadow: '0 10px 28px rgba(84,232,77,0.22)',
-                textTransform: 'none',
-              }}
-            >
-              Anpu
-            </span>
-          </div>
-
-          <div className="absolute inset-0 z-[3]" aria-label="Vehicle cutout carousel">
-            {HERO_VEHICLES.map((vehicle, index) => {
-              const role = roleForIndex(index);
-
-              return (
-                <article
-                  key={vehicle.id}
-                  data-hero-role={role}
-                  data-vehicle-id={vehicle.id}
-                  aria-hidden={role !== 'center'}
-                  className="flex items-center justify-center"
-                  style={getCardStyle(role, isMobile)}
-                >
-                  <img
-                    alt={vehicle.name}
-                    draggable={false}
-                    loading={index < 4 ? 'eager' : 'lazy'}
-                    style={getVehicleImageStyle(role)}
-                    src={assetUrl(vehicle.image)}
-                  />
-                </article>
-              );
-            })}
-          </div>
-
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-[30] w-[12vw]"
-            style={{
-              background: 'linear-gradient(to right, rgba(248,244,244,0.98), rgba(248,244,244,0))',
-            }}
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-[30] w-[12vw]"
-            style={{
-              background: 'linear-gradient(to left, rgba(248,244,244,0.98), rgba(248,244,244,0))',
-            }}
-          />
-
-          <section className="absolute bottom-4 left-4 z-[60] max-w-[360px] sm:bottom-10 sm:left-24">
-            <h1 className="mb-2 text-base font-extrabold uppercase tracking-widest opacity-95 sm:text-[24px]">
-              {activeSlideText.title}
-            </h1>
-            <p className="mb-5 hidden text-xs leading-[1.65] opacity-70 sm:block sm:text-sm">
-              {activeSlideText.description}
-            </p>
-
-            <div className="mb-4 flex items-center gap-2">
-              {HERO_SLIDES.map((slide, index) => (
-                <span
-                  key={slide.title}
-                  className="h-2 rounded-full transition-all duration-[650ms]"
-                  style={{
-                    width: index === activeIndex % HERO_SLIDES.length ? '32px' : '8px',
-                    backgroundColor: '#202A36',
-                    opacity: index === activeIndex % HERO_SLIDES.length ? 0.9 : 0.24,
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#202A36]/75 bg-white/45 backdrop-blur transition-[transform,background-color] duration-150 hover:scale-[1.08] hover:bg-white/80 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:h-16 sm:w-16"
-                type="button"
-                aria-label={t.aria.previous}
-                onClick={() => navigateHero('prev')}
-              >
-                <ArrowLeft size={26} strokeWidth={2.25} />
-              </button>
-              <button
-                className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#202A36]/75 bg-white/45 backdrop-blur transition-[transform,background-color] duration-150 hover:scale-[1.08] hover:bg-white/80 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:h-16 sm:w-16"
-                type="button"
-                aria-label={t.aria.next}
-                onClick={() => navigateHero('next')}
-              >
-                <ArrowRight size={26} strokeWidth={2.25} />
-              </button>
-            </div>
-          </section>
-
-          <button
-            className="absolute bottom-4 right-4 z-[60] flex items-center gap-2 font-display uppercase leading-none opacity-95 transition-opacity duration-200 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#202A36]/30 sm:bottom-10 sm:right-10 sm:gap-3"
-            type="button"
-            onClick={() => openView(activeSlide.cta === 'MY GARAGE' ? 'garage' : 'play')}
-            style={{
-              fontFamily: "'Anton', sans-serif",
-              fontSize: 'clamp(22px, 4vw, 58px)',
-              fontWeight: 400,
-              letterSpacing: 0,
-            }}
-          >
-            <span>{activeSlideText.cta}</span>
-            <ArrowRight className="h-5 w-5 sm:h-8 sm:w-8" strokeWidth={2.25} />
-          </button>
-
-          <div
-            className="pointer-events-none absolute bottom-0 left-0 right-0 z-[40] h-36"
-            style={{
-              background: 'linear-gradient(to top, rgba(248,244,244,0.96), rgba(248,244,244,0))',
-            }}
-          />
-        </main>
-      )}
-
-      {view === 'play' && markedVehicles.length === 0 ? (
-        <main className="relative z-[5] mx-auto flex min-h-[100dvh] max-w-[1440px] flex-col items-center justify-center px-4 pb-10 pt-28 sm:px-8">
-          <p className="text-2xl font-extrabold opacity-50 text-center">
-            {language === 'zh' ? '请家长先标记车辆颜色' : 'Please mark vehicle colors first'}
-          </p>
-          <button
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
-            type="button"
-            onClick={() => openView('parents')}
-          >
-            {language === 'zh' ? '去家长控制 →' : 'Parents →'}
-          </button>
-        </main>
-      ) : view === 'play' && (
-        <main className="relative z-[5] mx-auto min-h-[100dvh] max-w-[1440px] px-4 pb-10 pt-28 sm:px-8">
-          <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] opacity-55">
-                {round
-                  ? round.questionType === 'color' ? t.play.kickerColor
-                    : round.questionType === 'category' ? t.play.kickerCategory
-                    : round.questionType === 'mixed' ? t.play.kickerMixed
-                    : round.questionType === 'math' ? t.play.kickerMath
-                    : t.play.kickerColor
-                  : t.play.kickerColor}
-              </p>
-              <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
-                {formatFindPrompt(round)}
-              </h1>
-              <p className="mt-3 max-w-[580px] text-sm leading-6 opacity-70">
-                {round
-                  ? round.questionType === 'color' ? t.play.instructionColor
-                    : round.questionType === 'category' ? t.play.instructionCategory
-                    : round.questionType === 'mixed' ? t.play.instructionMixed
-                    : round.questionType === 'math' ? t.play.instructionMath
-                    : t.play.instructionColor
-                  : t.play.instructionColor}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="rounded-full border border-[#202A36]/15 bg-white/45 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.12em]">
-                {t.play.score} {score}
-              </span>
-              <button
-                className="inline-flex items-center gap-2 rounded-full border border-[#202A36]/20 bg-white/55 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.12em] transition-transform active:scale-95"
-                type="button"
-                onClick={() => createRound()}
-              >
-                <RotateCcw size={16} strokeWidth={2.25} />
-                {t.play.newRound}
-              </button>
-            </div>
-          </div>
-
-          {round && <>
-              <div
-	                className={`mb-5 rounded-[28px] border px-5 py-4 text-sm font-bold ${
-	                  round.result === 'correct'
-	                    ? 'border-green-700/20 bg-green-100/55 text-green-900'
-	                    : round.result === 'progress'
-	                      ? 'border-green-700/15 bg-green-50/55 text-green-900'
-	                    : round.result === 'wrong'
-	                      ? 'border-red-700/20 bg-red-100/55 text-red-900'
-                      : 'border-[#202A36]/10 bg-white/35'
-                }`}
-                aria-live="polite"
-              >
-                {round.result === 'correct' ? (
-                  <div className="flex items-center gap-4">
-                    <span
-                      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-green-700 text-[42px] leading-none text-white"
-                      style={{ fontFamily: "'Anton', sans-serif" }}
-                    >
-                      {round.targetCount}
-                    </span>
-                    <div>
-                      <strong className="block text-base">{formatCorrectPrompt(round)}</strong>
-                      <span className="mt-1 block text-xs uppercase tracking-[0.14em] opacity-65">
-                        {language === 'zh' ? `数字 ${round.targetCount}` : `Number ${round.targetCount}`}
-                      </span>
-                    </div>
-                  </div>
-	                ) : round.result === 'progress' ? (
-	                  <div className="flex items-center gap-4">
-	                    <span
-	                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-green-700 text-[36px] leading-none text-white"
-	                      style={{ fontFamily: "'Anton', sans-serif" }}
-	                    >
-	                      {round.selectedIds.length}
-	                    </span>
-	                    <div>
-	                      <strong className="block text-base">{formatProgressPrompt(round)}</strong>
-	                      <span className="mt-1 block text-xs uppercase tracking-[0.14em] opacity-65">
-	                        {language === 'zh'
-	                          ? `目标 ${round.targetCount} 辆`
-	                          : `Target ${round.targetCount} vehicles`}
-	                      </span>
-	                    </div>
-	                  </div>
-	                ) : round.result === 'wrong' ? (
-	                  t.play.wrong
-	                ) : (
-                  formatIdlePrompt(round)
-                )}
-              </div>
-
-              {round.questionType === 'math' && (
-                <div className="mb-5 rounded-[28px] border border-[#202A36]/10 bg-white/55 p-6 text-center">
-                  <p className="mb-6 text-2xl font-extrabold sm:text-4xl">{round.mathQuestion}</p>
-                  <div className="flex flex-wrap items-center justify-center gap-4">
-                    {round.mathChoices?.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        className={`flex h-20 w-20 items-center justify-center rounded-2xl border-2 text-3xl font-extrabold transition-all active:scale-95 ${
-                          round.result === 'correct' && n === round.targetCount
-                            ? 'border-green-700 bg-green-700 text-white'
-                            : round.result === 'wrong' && round.lastSelectedId === String(n)
-                              ? 'border-red-700/45 bg-red-100/55 text-red-900'
-                              : 'border-[#202A36]/20 bg-white hover:border-[#202A36]/40'
-                        }`}
-                        onClick={() => handleMathPick(n)}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {round.questionType !== 'math' &&
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {round.options.map((vehicle) => {
-                  const selected = round.selectedIds.includes(vehicle.id);
-                  const wrongSelected =
-                    round.lastSelectedId === vehicle.id && round.result === 'wrong';
-                  const correct = round.questionType === 'category'
-                    ? categoryForVehicle(vehicle) === round.targetCategory
-                    : colorForVehicle(vehicle) === round.targetColor;
-
-                  return (
-                    <button
-                      key={vehicle.id}
-                      className={`group relative flex aspect-[4/3] flex-col items-center justify-center overflow-hidden rounded-[28px] border bg-white/35 p-3 transition-transform active:scale-[0.98] ${
-	                        selected
-	                          ? 'border-green-700/45'
-	                          : wrongSelected
-	                            ? 'border-red-700/45'
-	                          : 'border-[#202A36]/10 hover:border-[#202A36]/28'
-	                      }`}
-                      type="button"
-                      onClick={() => handleVehiclePick(vehicle)}
-                    >
-                      <img
-                        className="h-[76%] w-full object-contain transition-transform duration-200 group-hover:scale-[1.03]"
-                        src={assetUrl(vehicle.image)}
-                        alt={vehicle.name}
-                      />
-                      <span className="mt-1 max-w-full truncate text-xs font-bold opacity-70">
-                        {vehicle.name}
-                      </span>
-	                      {selected && correct && (
-                        <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-green-700 text-white">
-                          <Check size={17} strokeWidth={2.4} />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>}
-            </>
-            }
-
-        </main>
-      )}
-
-      {view === 'garage' && (
-        <main className="relative z-[5] mx-auto min-h-[100dvh] max-w-[1440px] px-4 pb-10 pt-28 sm:px-8">
-          <div className="mb-7">
-            <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] opacity-55">
-              {t.garage.kicker}
-            </p>
-            <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
-              {storage.collectedCards.length}
-            </h1>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {markedVehicles.map((vehicle) => {
-              const collected = storage.collectedCards.includes(vehicle.id);
-              return (
-                <article
-                  key={vehicle.id}
-                  className={`relative rounded-2xl border-2 p-2 transition-all ${
-                    collected
-                      ? 'border-[#202A36]/20 bg-white shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.03]'
-                      : 'border-[#202A36]/5 bg-[#F8F4F4]'
-                  }`}
-                  onClick={() => {
-                    if (collected && !zoomAnimating) {
-                      setZoomedCard(vehicle.id);
-                    }
-                  }}
-                >
-                  <img
-                    className="aspect-[3/4] w-full rounded-xl object-cover"
-                    src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
-                    alt={vehicle.name}
-                    loading="lazy"
-                    style={collected ? {} : { filter: 'grayscale(1) opacity(0.35)' }}
-                  />
-                  <div className="mt-2 text-center">
-                    <strong
-                      className={`block truncate text-xs ${
-                        collected ? 'text-[#202A36]' : 'text-[#202A36]/30'
-                      }`}
-                    >
-                      {vehicle.name}
-                    </strong>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </main>
-      )}
-
-      {view === 'parents' && (
-        <main className="relative z-[5] mx-auto min-h-[100dvh] max-w-[1440px] px-4 pb-10 pt-28 sm:px-8">
-          <div className="mb-7 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-            <div>
-              <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] opacity-55">
-                {t.parents.kicker}
-              </p>
-              <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
-                {t.parents.title}
-              </h1>
-              <p className="mt-3 max-w-[680px] text-sm leading-6 opacity-70">
-                {t.parents.description}
-              </p>
-            </div>
-            <button
-              className="inline-flex items-center gap-2 rounded-full border border-[#202A36]/20 bg-white/55 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.12em]"
-              type="button"
-              onClick={() => setStorage({ ...DEFAULT_V2 })}
-            >
-              {t.parents.reset}
-            </button>
-          </div>
-
-          <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
-            <button
-              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold uppercase tracking-[0.12em] ${
-                parentFilter === 'all'
-                  ? 'border-[#202A36] bg-[#202A36] text-white'
-                  : 'border-[#202A36]/20 bg-white/45'
-              }`}
-              type="button"
-              onClick={() => setParentFilter('all')}
-            >
-              {t.parents.all} {VEHICLES.length}
-            </button>
-            {COLOR_OPTIONS.map((color) => (
-              <button
-                key={color}
-                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold uppercase tracking-[0.12em] ${
-                  parentFilter === color
-                    ? 'border-[#202A36] bg-[#202A36] text-white'
-                    : 'border-[#202A36]/20 bg-white/45'
-                }`}
-                type="button"
-                onClick={() => setParentFilter(color)}
-              >
-                {colorLabel(color)} {colorCounts.get(color) || 0}
-              </button>
-            ))}
-            {CATEGORY_OPTIONS.map((cat) => (
-              <button
-                key={cat}
-                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold uppercase tracking-[0.12em] ${
-                  parentFilter === cat
-                    ? 'border-[#202A36] bg-[#202A36] text-white'
-                    : 'border-[#202A36]/20 bg-white/45'
-                }`}
-                type="button"
-                onClick={() => setParentFilter(cat)}
-              >
-                {CATEGORY_LABELS[language][cat]}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {parentVehicles.map((vehicle) => {
-              const currentColor = colorForVehicle(vehicle);
-              const currentCategory = categoryForVehicle(vehicle);
-              const colorLocked = storage.lockedColors[vehicle.id] || false;
-              const catLocked = storage.lockedCategories[vehicle.id] || false;
-
-              return (
-                <article
-                  key={vehicle.id}
-                  className="grid grid-cols-[112px_1fr] gap-4 rounded-[28px] border border-[#202A36]/10 bg-white/35 p-3"
-                >
-                  <div className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-white/35">
-                    <img className="h-full w-full object-contain" src={assetUrl(vehicle.image)} alt={vehicle.name} />
-                  </div>
-                  <div className="min-w-0">
-                    <strong className="block truncate text-sm">{vehicle.name}</strong>
-                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] opacity-55">
-                      {CATEGORY_LABELS[language][currentCategory]}
-                    </span>
-                    <div className="mt-3 flex items-center gap-2">
-                      <label className="text-xs font-extrabold uppercase tracking-[0.12em] opacity-60">
-                        {t.parents.mainColor}
-                      </label>
-                      <button
-                        type="button"
-                        className={`ml-1 rounded-full p-0.5 transition-colors ${
-                          colorLocked ? 'bg-[#202A36] text-white' : 'bg-[#202A36]/10 text-[#202A36]/50 hover:bg-[#202A36]/20'
-                        }`}
-                        onClick={() => toggleLockColor(vehicle.id)}
-                        title={colorLocked ? '解锁颜色' : '锁定颜色'}
-                      >
-                        {colorLocked ? <Lock size={14} strokeWidth={2.5} /> : <Unlock size={14} strokeWidth={2.5} />}
-                      </button>
-                    </div>
-                    <select
-                      className="mt-2 w-full rounded-2xl border border-[#202A36]/15 bg-[#F8F4F4] px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#202A36]/20"
-                      value={currentColor}
-                      disabled={colorLocked}
-                      onChange={(event) =>
-                        updateVehicleColor(vehicle.id, event.target.value as VehicleColor)
-                      }
-                    >
-                      <option value="unknown">{colorLabel('unknown')}</option>
-                      {COLOR_OPTIONS.map((color) => (
-                        <option key={color} value={color}>
-                          {colorLabel(color)}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="mt-3 flex items-center gap-2">
-                      <label className="text-xs font-extrabold uppercase tracking-[0.12em] opacity-60">
-                        {language === 'zh' ? '类别' : 'Category'}
-                      </label>
-                      <button
-                        type="button"
-                        className={`ml-1 rounded-full p-0.5 transition-colors ${
-                          catLocked ? 'bg-[#202A36] text-white' : 'bg-[#202A36]/10 text-[#202A36]/50 hover:bg-[#202A36]/20'
-                        }`}
-                        onClick={() => toggleLockCategory(vehicle.id)}
-                        title={catLocked ? '解锁类别' : '锁定类别'}
-                      >
-                        {catLocked ? <Lock size={14} strokeWidth={2.5} /> : <Unlock size={14} strokeWidth={2.5} />}
-                      </button>
-                    </div>
-                    <select
-                      className="mt-2 w-full rounded-2xl border border-[#202A36]/15 bg-[#F8F4F4] px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#202A36]/20"
-                      value={currentCategory}
-                      disabled={catLocked}
-                      onChange={(event) =>
-                        updateVehicleCategory(vehicle.id, event.target.value as VehicleCategory)
-                      }
-                    >
-                      {CATEGORY_OPTIONS.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {CATEGORY_LABELS[language][cat]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </main>
-      )}
-      {showReward && (() => {
-        const rewardVehicle = VEHICLES.find((v) => v.id === showReward);
-        if (!rewardVehicle) return null;
-        return (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="mx-4 rounded-3xl bg-white p-8 text-center shadow-2xl">
-              <img
-                src={assetUrl(rewardVehicle.image)}
-                alt={rewardVehicle.name}
-                className="mx-auto h-40 object-contain"
-              />
-              <h2 className="mt-4 text-2xl font-extrabold">
-                {language === 'zh' ? '获得了新卡牌！' : 'New Card!'}
-              </h2>
-              <p className="mt-2 text-lg font-bold">{rewardVehicle.name}</p>
-              <button
-                className="mt-6 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
-                type="button"
-                onClick={() => setShowReward(null)}
-              >
-                {language === 'zh' ? '继续游戏' : 'Continue'}
-              </button>
-            </div>
-          </div>
-        );
-      })()}
-      {showAllCollected && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 rounded-3xl bg-white p-8 text-center shadow-2xl">
-            <h2 className="text-2xl font-extrabold">
-              {language === 'zh' ? '已收集全部车辆！' : 'All vehicles collected!'}
-            </h2>
-            <p className="mt-2 opacity-60">
-              {language === 'zh' ? '太厉害了！' : 'Amazing!'}
-            </p>
-            <button
-              className="mt-6 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
-              type="button"
-              onClick={() => setShowAllCollected(false)}
-            >
-              {language === 'zh' ? '继续游戏' : 'Continue'}
-            </button>
-          </div>
-        </div>
-      )}
-      {zoomedCard && (() => {
-        const vehicle = VEHICLES.find((v) => v.id === zoomedCard);
-        if (!vehicle) return null;
-        return (
-          <div
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            style={{ perspective: '1200px' }}
-            onClick={() => {
-              if (!zoomAnimating) {
-                setZoomAnimating(true);
-                setTimeout(() => {
-                  setZoomedCard(null);
-                  setZoomAnimating(false);
-                }, 600);
-              }
-            }}
-          >
-            <div
-              className="relative w-[min(80vw,400px)] cursor-pointer"
-              style={{
-                transformStyle: 'preserve-3d',
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: zoomAnimating ? 'rotateY(360deg) scale(1)' : 'rotateY(0deg) scale(1)',
-                animation: zoomAnimating ? 'none' : 'cardReveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!zoomAnimating) {
-                  setZoomAnimating(true);
-                  setTimeout(() => {
-                    setZoomedCard(null);
-                    setZoomAnimating(false);
-                  }, 600);
-                }
-              }}
-            >
-              <img
-                className="w-full rounded-2xl shadow-2xl"
-                src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
-                alt={vehicle.name}
-                style={{ backfaceVisibility: 'hidden' }}
-              />
-              <img
-                className="absolute inset-0 w-full rounded-2xl shadow-2xl"
-                src={`${import.meta.env.BASE_URL}cards/卡牌-背面.png`}
-                alt=""
-                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-              />
-            </div>
-            <p className="absolute bottom-12 text-center text-lg font-extrabold text-white drop-shadow-lg">
-              {vehicle.name}
-            </p>
-          </div>
-        );
-      })()}
       <style>{`
         @keyframes cardReveal {
           0% { transform: rotateY(0deg) scale(0.3); }
@@ -1789,5 +227,15 @@ export function CarAdventureHero() {
         }
       `}</style>
     </div>
+  );
+}
+
+// ── Entry Point ───────────────────────────────────────────
+
+export function CarAdventureHero() {
+  return (
+    <GameProvider>
+      <AppShell />
+    </GameProvider>
   );
 }
