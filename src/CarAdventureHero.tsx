@@ -755,19 +755,20 @@ export function CarAdventureHero() {
         }
 
         const totalTargetCount = mixedTargets.reduce((sum, t) => sum + t.count, 0);
-        const allTargetIds = new Set<string>();
+        const actualTargets: Vehicle[] = [];
+        const usedIds = new Set<string>();
         mixedTargets.forEach((t) => {
-          markedVehicles
-            .filter((v) => {
-              if (t.color && t.category) return colorForVehicle(v) === t.color && categoryForVehicle(v) === t.category;
-              if (t.color) return colorForVehicle(v) === t.color;
-              return false;
-            })
-            .forEach((v) => allTargetIds.add(v.id));
+          const matching = markedVehicles.filter((v) => {
+            if (usedIds.has(v.id)) return false;
+            if (t.color && t.category) return colorForVehicle(v) === t.color && categoryForVehicle(v) === t.category;
+            if (t.color) return colorForVehicle(v) === t.color;
+            return false;
+          });
+          const picked = sample(matching, t.count);
+          picked.forEach((v) => usedIds.add(v.id));
+          actualTargets.push(...picked);
         });
-        const distractorPool = markedVehicles.filter((v) => !allTargetIds.has(v.id));
-        const targetVehicles = Array.from(allTargetIds).map((id) => VEHICLES.find((v) => v.id === id)).filter(Boolean) as Vehicle[];
-        const actualTargets = targetVehicles.slice(0, totalTargetCount);
+        const distractorPool = markedVehicles.filter((v) => !usedIds.has(v.id));
         const distractors = sample(distractorPool, Math.max(0, 8 - actualTargets.length));
 
         setRound({
