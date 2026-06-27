@@ -491,7 +491,8 @@ export function CarAdventureHero() {
   const [score, setScore] = useState(0);
   const [showReward, setShowReward] = useState<string | null>(null);
   const [showAllCollected, setShowAllCollected] = useState(false);
-  const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
+  const [zoomedCard, setZoomedCard] = useState<string | null>(null);
+  const [zoomAnimating, setZoomAnimating] = useState(false);
   const [parentFilter, setParentFilter] = useState<'all' | VehicleColor | VehicleCategory>('all');
   const animationTimer = useRef<number | null>(null);
   const autoPausedUntil = useRef(0);
@@ -1163,55 +1164,27 @@ export function CarAdventureHero() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {markedVehicles.map((vehicle) => {
               const collected = storage.collectedCards.includes(vehicle.id);
-              const flipped = flippedCards.has(vehicle.id);
               return (
                 <article
                   key={vehicle.id}
                   className={`relative rounded-2xl border-2 p-2 transition-all ${
                     collected
-                      ? 'border-[#202A36]/20 bg-white shadow-md cursor-pointer'
+                      ? 'border-[#202A36]/20 bg-white shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.03]'
                       : 'border-[#202A36]/5 bg-[#F8F4F4]'
                   }`}
-                  style={{ perspective: '800px' }}
                   onClick={() => {
-                    if (collected) {
-                      setFlippedCards((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(vehicle.id)) next.delete(vehicle.id);
-                        else next.add(vehicle.id);
-                        return next;
-                      });
+                    if (collected && !zoomAnimating) {
+                      setZoomedCard(vehicle.id);
                     }
                   }}
                 >
-                  <div
-                    className="relative w-full"
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                      transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                    }}
-                  >
-                    <img
-                      className="aspect-[3/4] w-full rounded-xl object-cover"
-                      src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
-                      alt={vehicle.name}
-                      loading="lazy"
-                      style={{
-                        ...(collected ? {} : { filter: 'grayscale(1) opacity(0.35)' }),
-                        backfaceVisibility: 'hidden',
-                      }}
-                    />
-                    <img
-                      className="absolute inset-0 aspect-[3/4] w-full rounded-xl object-cover"
-                      src={`${import.meta.env.BASE_URL}cards/卡牌-背面.png`}
-                      alt=""
-                      style={{
-                        backfaceVisibility: 'hidden',
-                        transform: 'rotateY(180deg)',
-                      }}
-                    />
-                  </div>
+                  <img
+                    className="aspect-[3/4] w-full rounded-xl object-cover"
+                    src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
+                    alt={vehicle.name}
+                    loading="lazy"
+                    style={collected ? {} : { filter: 'grayscale(1) opacity(0.35)' }}
+                  />
                   <div className="mt-2 text-center">
                     <strong
                       className={`block truncate text-xs ${
@@ -1424,6 +1397,73 @@ export function CarAdventureHero() {
           </div>
         </div>
       )}
+      {zoomedCard && (() => {
+        const vehicle = VEHICLES.find((v) => v.id === zoomedCard);
+        if (!vehicle) return null;
+        return (
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            style={{ perspective: '1200px' }}
+            onClick={() => {
+              if (!zoomAnimating) {
+                setZoomAnimating(true);
+                setTimeout(() => {
+                  setZoomedCard(null);
+                  setZoomAnimating(false);
+                }, 600);
+              }
+            }}
+          >
+            <div
+              className="relative w-[min(80vw,400px)] cursor-pointer"
+              style={{
+                transformStyle: 'preserve-3d',
+                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: zoomAnimating ? 'rotateY(360deg) scale(1)' : 'rotateY(0deg) scale(1)',
+                animation: zoomAnimating ? 'none' : 'cardReveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!zoomAnimating) {
+                  setZoomAnimating(true);
+                  setTimeout(() => {
+                    setZoomedCard(null);
+                    setZoomAnimating(false);
+                  }, 600);
+                }
+              }}
+            >
+              <img
+                className="w-full rounded-2xl shadow-2xl"
+                src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
+                alt={vehicle.name}
+                style={{ backfaceVisibility: 'hidden' }}
+              />
+              <img
+                className="absolute inset-0 w-full rounded-2xl shadow-2xl"
+                src={`${import.meta.env.BASE_URL}cards/卡牌-背面.png`}
+                alt=""
+                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              />
+            </div>
+            <p className="absolute bottom-12 text-center text-lg font-extrabold text-white drop-shadow-lg">
+              {vehicle.name}
+            </p>
+          </div>
+        );
+      })()}
+      <style>{`
+        @keyframes cardReveal {
+          0% { transform: rotateY(0deg) scale(0.3); }
+          50% { transform: rotateY(180deg) scale(1.05); }
+          100% { transform: rotateY(360deg) scale(1); }
+        }
+        @keyframes cardShrink {
+          0% { transform: rotateY(360deg) scale(1); }
+          50% { transform: rotateY(540deg) scale(1.05); }
+          100% { transform: rotateY(720deg) scale(0.3); }
+        }
+      `}</style>
     </div>
   );
 }
