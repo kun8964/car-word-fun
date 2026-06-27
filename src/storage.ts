@@ -1,4 +1,5 @@
 import type { VehicleColor, VehicleCategory } from './vehicleData';
+import { logger } from './logger';
 
 export type StorageV2 = {
   colorOverrides: Record<string, VehicleColor>;
@@ -26,7 +27,8 @@ export function readV2(): StorageV2 {
     const raw = localStorage.getItem(KEY_V2);
     if (!raw) return { ...DEFAULT_V2 };
     return { ...DEFAULT_V2, ...JSON.parse(raw) };
-  } catch {
+  } catch (e) {
+    logger.error('storage', 'readV2 failed', String(e));
     return { ...DEFAULT_V2 };
   }
 }
@@ -43,6 +45,7 @@ export function migrateV1toV2(): void {
     const existing = readV2();
     if (Object.keys(existing.colorOverrides).length > 0) return;
     writeV2({ ...existing, colorOverrides: v1ColorOverrides });
+    logger.info('storage', 'migrated v1→v2', { colors: Object.keys(v1ColorOverrides).length });
   } catch {
     /* v1 data corrupt, silently use defaults */
   }

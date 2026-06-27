@@ -54,7 +54,12 @@ describe('createRound', () => {
   it('generates a valid round with options', () => {
     const round = createRound(makeParams());
     expect(round.questionType).toBeDefined();
-    expect(round.options.length).toBeGreaterThan(0);
+    if (round.questionType === 'math') {
+      expect(round.mathQuestion).toBeTruthy();
+      expect(round.mathChoices?.length).toBeGreaterThan(0);
+    } else {
+      expect(round.options.length).toBeGreaterThan(0);
+    }
     expect(round.targetCount).toBeGreaterThan(0);
     expect(round.result).toBe('idle');
     expect(round.selectedIds).toEqual([]);

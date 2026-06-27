@@ -14,6 +14,7 @@ import { PlayView } from './views/PlayView';
 import { GarageView } from './views/GarageView';
 import { ParentsView } from './views/ParentsView';
 import { RewardModal } from './components/RewardModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles.css';
 
 // ── Card styles ──────────────────────────────────────────
@@ -234,8 +235,10 @@ function AppShell() {
 
 export function CarAdventureHero() {
   return (
-    <GameProvider>
-      <AppShell />
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <AppShell />
+      </GameProvider>
+    </ErrorBoundary>
   );
 }

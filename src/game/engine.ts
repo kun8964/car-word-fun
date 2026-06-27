@@ -4,6 +4,8 @@ import {
   Language, MixedTarget, Round,
 } from '../constants';
 
+import { logger } from '../logger';
+
 // ── helpers ──────────────────────────────────────────────
 
 export function sample<T>(items: T[], count: number) {
@@ -51,6 +53,8 @@ export function createRound(params: RoundGenParams): Round {
   const useMath = canDoMath && roll < 0.15;
   const useMixed = !useMath && canDoMixed && roll < 0.30;
   const useCategory = !useMath && !useMixed && canDoCategory && (!canDoColor || Math.random() < 0.4);
+
+  logger.debug('engine', 'createRound', { useMath, useMixed, useCategory, canDoColor, canDoCategory, canDoMath, collectedCards: collectedCards.length });
 
   if (useMath) return buildMathRound(colorForVehicle, language, colorLabel, collectedCards);
   if (useMixed) return buildMixedRound(colorForVehicle, categoryForVehicle, availableColors, markedVehicles);

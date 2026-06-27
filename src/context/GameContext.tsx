@@ -6,6 +6,7 @@ import {
   CATEGORY_OPTIONS, COLOR_OPTIONS,
 } from '../constants';
 import { createRound, evaluatePick, type RoundGenParams } from '../game/engine';
+import { logger } from '../logger';
 
 interface GameContextValue {
   // navigation
@@ -58,7 +59,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
   const [storage, setStorage] = useState<StorageV2>(() => {
     migrateV1toV2();
-    return readV2();
+    const data = readV2();
+    logger.info('storage', 'init', { streak: data.streak, collectedCards: data.collectedCards.length, overrides: Object.keys(data.colorOverrides).length });
+    return data;
   });
   const [round, setRound] = useState<Round | null>(null);
   const [score, setScore] = useState(0);
@@ -105,6 +108,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [storage]);
 
   const generateRound = useCallback(() => {
+    logger.debug('game', 'generateRound', { collectedCards: storage.collectedCards.length, markedVehicles: markedVehicles.length });
     const params: RoundGenParams = {
       colorCounts,
       markedVehicles,
@@ -114,7 +118,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       language,
       colorLabel,
     };
-    setRound(createRound(params));
+    const newRound = createRound(params);
+    logger.info('game', `round:${newRound.questionType}`, {
+      target: newRound.questionType === 'math' ? newRound.mathQuestion : newRound.questionType === 'color' ? newRound.targetColor : newRound.questionType === 'category' ? newRound.targetCategory : 'mixed',
+      count: newRound.targetCount, options: newRound.options.length,
+    });
+    setRound(newRound);
   }, [colorCounts, markedVehicles, categoryForVehicle, colorForVehicle, storage.collectedCards, language, colorLabel]);
 
   const handlePick = useCallback(
@@ -129,6 +138,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!result.correct && result.result === 'wrong') {
+        logger.debug('game', 'pick:wrong', { picked: vehicle.id, color: vehicle.color });
         setRound({ ...round, ...result, result: 'wrong' });
         setStorage((prev) => ({ ...prev, streak: 0 }));
         return;
@@ -148,6 +158,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             .map((v) => v.id);
           if (uncollected.length > 0) {
             const rewardId = uncollected[Math.floor(Math.random() * uncollected.length)];
+            logger.info('game', 'reward:card', { rewardId, streak: newStreak, totalCollected: storage.collectedCards.length + 1 });
             setShowReward(rewardId);
             setStorage((prev) => ({ ...prev, collectedCards: [...prev.collectedCards, rewardId] }));
           } else {
@@ -185,6 +196,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const openView = useCallback(
     (nextView: View) => {
+      logger.info('nav', `view:${nextView}`);
       setView(nextView);
       if (nextView === 'play') {
         generateRound();
