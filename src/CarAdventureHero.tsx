@@ -2,9 +2,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Lock,
   Menu,
   RotateCcw,
   Settings2,
+  Unlock,
   X,
 } from 'lucide-react';
 import { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -47,6 +49,9 @@ const COLOR_LABELS: Record<Language, Record<VehicleColor, string>> = {
     orange: 'Orange',
     gray: 'Gray',
     brown: 'Brown',
+    camouflage: 'Camo',
+    blackWhite: 'B&W',
+    other: 'Other',
     unknown: 'Unmarked',
   },
   zh: {
@@ -60,6 +65,9 @@ const COLOR_LABELS: Record<Language, Record<VehicleColor, string>> = {
     orange: '橙色',
     gray: '灰色',
     brown: '棕色',
+    camouflage: '迷彩',
+    blackWhite: '黑白',
+    other: '其它',
     unknown: '未标记',
   },
 };
@@ -298,6 +306,9 @@ const COLOR_OPTIONS: VehicleColor[] = [
   'orange',
   'gray',
   'brown',
+  'camouflage',
+  'blackWhite',
+  'other',
 ];
 const CATEGORY_OPTIONS: VehicleCategory[] = [
   'car',
@@ -305,6 +316,8 @@ const CATEGORY_OPTIONS: VehicleCategory[] = [
   'bus',
   'construction',
   'motorcycle',
+  'tank',
+  'watercraft',
   'offroad',
   'aircraft',
 ];
@@ -315,6 +328,8 @@ const CATEGORY_LABELS: Record<Language, Record<VehicleCategory, string>> = {
     bus: 'Bus',
     construction: 'Construction',
     motorcycle: 'Motorcycle',
+    tank: 'Tank',
+    watercraft: 'Watercraft',
     offroad: 'Off-road',
     aircraft: 'Aircraft',
   },
@@ -324,6 +339,8 @@ const CATEGORY_LABELS: Record<Language, Record<VehicleCategory, string>> = {
     bus: '巴士',
     construction: '工程车',
     motorcycle: '摩托车',
+    tank: '坦克',
+    watercraft: '摩托艇',
     offroad: '越野车',
     aircraft: '飞机',
   },
@@ -1267,11 +1284,13 @@ export function CarAdventureHero() {
                       </label>
                       <button
                         type="button"
-                        className="text-sm"
+                        className={`ml-1 rounded-full p-0.5 transition-colors ${
+                          colorLocked ? 'bg-[#202A36] text-white' : 'bg-[#202A36]/10 text-[#202A36]/50 hover:bg-[#202A36]/20'
+                        }`}
                         onClick={() => toggleLockColor(vehicle.id)}
                         title={colorLocked ? '解锁颜色' : '锁定颜色'}
                       >
-                        {colorLocked ? '🔒' : '🔓'}
+                        {colorLocked ? <Lock size={14} strokeWidth={2.5} /> : <Unlock size={14} strokeWidth={2.5} />}
                       </button>
                     </div>
                     <select
@@ -1295,11 +1314,13 @@ export function CarAdventureHero() {
                       </label>
                       <button
                         type="button"
-                        className="text-sm"
+                        className={`ml-1 rounded-full p-0.5 transition-colors ${
+                          catLocked ? 'bg-[#202A36] text-white' : 'bg-[#202A36]/10 text-[#202A36]/50 hover:bg-[#202A36]/20'
+                        }`}
                         onClick={() => toggleLockCategory(vehicle.id)}
                         title={catLocked ? '解锁类别' : '锁定类别'}
                       >
-                        {catLocked ? '🔒' : '🔓'}
+                        {catLocked ? <Lock size={14} strokeWidth={2.5} /> : <Unlock size={14} strokeWidth={2.5} />}
                       </button>
                     </div>
                     <select

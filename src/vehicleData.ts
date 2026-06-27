@@ -1,6 +1,8 @@
-export type VehicleColor = 'red' | 'blue' | 'yellow' | 'green' | 'white' | 'black' | 'silver' | 'orange' | 'gray' | 'brown' | 'unknown';
+export type VehicleColor = 'red' | 'blue' | 'yellow' | 'green' | 'white' | 'black' | 'silver' | 'orange' | 'gray' | 'brown' | 'camouflage' | 'blackWhite' | 'other' | 'unknown';
 
-export type VehicleCategory = 'car' | 'race' | 'bus' | 'construction' | 'motorcycle' | 'offroad' | 'aircraft';
+export type VehicleCategory = 'car' | 'race' | 'bus' | 'construction' | 'motorcycle' | 'tank' | 'watercraft' | 'offroad' | 'aircraft';
+
+export type VehicleLocation = 'land' | 'water' | 'air';
 
 export type Vehicle = {
   id: string;
@@ -21,6 +23,9 @@ export const COLOR_LABELS: Record<VehicleColor, string> = {
   orange: 'Orange 橙色',
   gray: 'Gray 灰色',
   brown: 'Brown 棕色',
+  camouflage: 'Camouflage 迷彩',
+  blackWhite: 'B&W 黑白',
+  other: 'Other 其它',
   unknown: 'Unmarked 未标记',
 };
 
