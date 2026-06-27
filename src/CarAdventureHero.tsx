@@ -43,11 +43,11 @@ function getCardStyle(role: CardRole, isMobile: boolean): CSSProperties {
     position: 'absolute', aspectRatio: '16 / 10', overflow: 'visible',
     transition: CARD_TRANSITION, willChange: 'transform, filter, opacity, left, bottom, width',
   };
-  if (role === 'center') return { ...base, left: '50%', bottom: isMobile ? '27%' : 'max(11%, 126px)', width: isMobile ? '81%' : 'min(60.72%, calc((100vh - 190px) * 1.75))', transform: 'translateX(-50%) scale(1)', filter: 'none', opacity: 1, zIndex: 20 };
-  if (role === 'left') return { ...base, left: isMobile ? '18%' : '13.5%', bottom: isMobile ? '20%' : '16%', width: isMobile ? '22%' : '18.5%', transform: 'translateX(-50%) scale(1)', filter: 'blur(0.4px)', opacity: 0.52, zIndex: 6 };
-  if (role === 'right') return { ...base, left: isMobile ? '82%' : '86.5%', bottom: isMobile ? '20%' : '16%', width: isMobile ? '22%' : '18.5%', transform: 'translateX(-50%) scale(1)', filter: 'blur(0.4px)', opacity: 0.52, zIndex: 6 };
-  if (role === 'back') return { ...base, left: '50%', bottom: isMobile ? '25%' : '17%', width: isMobile ? '18%' : '14%', transform: 'translate(-50%, 18%) scale(0.7)', filter: 'blur(2px)', opacity: 0, zIndex: 1 };
-  return { ...base, left: '50%', bottom: isMobile ? '27%' : '21%', width: isMobile ? '32%' : '20%', transform: 'translateX(-50%) scale(0.58)', filter: 'blur(5px)', opacity: 0, zIndex: 1 };
+  if (role === 'center') return { ...base, left: '50%', bottom: isMobile ? '37%' : 'max(21%, 126px)', width: isMobile ? '81%' : 'min(60.72%, calc((100vh - 190px) * 1.75))', transform: 'translateX(-50%) scale(1)', filter: 'none', opacity: 1, zIndex: 20 };
+  if (role === 'left') return { ...base, left: isMobile ? '18%' : '13.5%', bottom: isMobile ? '30%' : '26%', width: isMobile ? '22%' : '18.5%', transform: 'translateX(-50%) scale(1)', filter: 'blur(0.4px)', opacity: 0.52, zIndex: 6 };
+  if (role === 'right') return { ...base, left: isMobile ? '82%' : '86.5%', bottom: isMobile ? '30%' : '26%', width: isMobile ? '22%' : '18.5%', transform: 'translateX(-50%) scale(1)', filter: 'blur(0.4px)', opacity: 0.52, zIndex: 6 };
+  if (role === 'back') return { ...base, left: '50%', bottom: isMobile ? '35%' : '27%', width: isMobile ? '18%' : '14%', transform: 'translate(-50%, 18%) scale(0.7)', filter: 'blur(2px)', opacity: 0, zIndex: 1 };
+  return { ...base, left: '50%', bottom: isMobile ? '37%' : '31%', width: isMobile ? '32%' : '20%', transform: 'translateX(-50%) scale(0.58)', filter: 'blur(5px)', opacity: 0, zIndex: 1 };
 }
 
 // ── Home View ────────────────────────────────────────────
@@ -135,7 +135,7 @@ function HomeView() {
         className="pointer-events-none absolute inset-x-0 flex select-none items-center justify-center"
         data-hero-ghost
         style={{
-          zIndex: 2, top: isMobile ? '28%' : '25%', fontFamily: "'Anton', sans-serif",
+          zIndex: 2, top: isMobile ? '18%' : '15%', fontFamily: "'Anton', sans-serif",
           fontSize: 'clamp(42px, 10.8vw, 168px)', fontWeight: 400, lineHeight: 1,
           textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap',
         }}
