@@ -123,19 +123,31 @@ const UI_TEXT = {
       },
     ],
     play: {
-      kicker: 'Color game',
+      kickerColor: 'Color game',
+      kickerCategory: 'Category game',
+      kickerMixed: 'Mixed game',
+      kickerMath: 'Math game',
       find: 'Find',
       fallbackColor: 'a color',
-      instruction: 'Look at the vehicles below. Tap every vehicle that matches the target color, then count them.',
+      fallbackCategory: 'a category',
+      instructionColor: 'Look at the vehicles below. Tap every vehicle that matches the target color, then count them.',
+      instructionCategory: 'Look at the vehicles below. Tap every vehicle that matches the target category, then count them.',
+      instructionMixed: 'Look at the vehicles below. Find vehicles matching each target color or category.',
+      instructionMath: 'Count how many vehicles in total. Tap the correct number.',
       score: 'Score',
       newRound: 'New round',
-      idlePrefix: 'Tap a',
-      idleSuffix: 'vehicle.',
+      idlePrefixColor: 'Tap a',
+      idleSuffixColor: 'vehicle.',
+      idlePrefixCategory: 'Tap a',
+      idleSuffixCategory: '.',
+      idleMixed: 'Tap vehicles that match the conditions.',
       progressPrefix: 'Found',
       progressMiddle: 'of',
       progressSuffix: 'Keep looking.',
-      correctPrefix: 'Correct. There are',
-      correctSuffix: 'matching vehicles here.',
+      correctPrefixColor: 'Correct. There are',
+      correctSuffixColor: 'matching vehicles here.',
+      correctPrefixMixed: 'Correct. You found',
+      correctSuffixMixed: 'vehicles in total.',
       wrong: 'Try again. Look for another vehicle with the target color.',
     },
     garage: {
@@ -196,19 +208,31 @@ const UI_TEXT = {
       },
     ],
     play: {
-      kicker: '颜色游戏',
+      kickerColor: '颜色游戏',
+      kickerCategory: '类别游戏',
+      kickerMixed: '混合游戏',
+      kickerMath: '数学游戏',
       find: '找到',
       fallbackColor: '一种颜色',
-      instruction: '看看下面的车辆，把所有符合目标颜色的车都点出来，然后数一数一共有几辆。',
+      fallbackCategory: '一种类别',
+      instructionColor: '看看下面的车辆，把所有符合目标颜色的车都点出来，然后数一数一共有几辆。',
+      instructionCategory: '看看下面的车辆，把所有符合目标类别的车都点出来，然后数一数一共有几辆。',
+      instructionMixed: '看看下面的车辆，找出符合每种目标颜色或类别的车。',
+      instructionMath: '算一算一共有多少辆车，点击正确的数字。',
       score: '得分',
       newRound: '换一题',
-      idlePrefix: '请点击一辆',
-      idleSuffix: '的车。',
+      idlePrefixColor: '请点击一辆',
+      idleSuffixColor: '的车。',
+      idlePrefixCategory: '请点击一辆',
+      idleSuffixCategory: '。',
+      idleMixed: '请点击符合条件的车辆。',
       progressPrefix: '已经找到',
       progressMiddle: '辆，共',
       progressSuffix: '辆，继续找。',
-      correctPrefix: '答对啦！这里有',
-      correctSuffix: '辆这种颜色的车。',
+      correctPrefixColor: '答对啦！这里有',
+      correctSuffixColor: '辆这种颜色的车。',
+      correctPrefixMixed: '答对啦！一共找到了',
+      correctSuffixMixed: '辆车。',
       wrong: '再试一次，找找另一辆目标颜色的车。',
     },
     garage: {
@@ -996,17 +1020,27 @@ export function CarAdventureHero() {
   };
 
   const formatIdlePrompt = (roundData: Round) => {
+    if (roundData.questionType === 'mixed') return t.play.idleMixed;
+    if (roundData.questionType === 'math') return '';
+    const prefix = roundData.questionType === 'category' ? t.play.idlePrefixCategory : t.play.idlePrefixColor;
+    const suffix = roundData.questionType === 'category' ? t.play.idleSuffixCategory : t.play.idleSuffixColor;
     const label = formatRoundLabel(roundData);
+    const isCategory = roundData.questionType === 'category';
     return language === 'zh'
-      ? `${t.play.idlePrefix}${label}${t.play.idleSuffix}`
-      : `${t.play.idlePrefix} ${label} ${t.play.idleSuffix}`;
+      ? `${prefix}${label}${suffix}`
+      : isCategory ? `${prefix} ${label}${suffix}` : `${prefix} ${label} ${suffix}`;
   };
 
   const formatCorrectPrompt = (roundData: Round) => {
     const label = formatRoundLabel(roundData);
+    if (roundData.questionType === 'mixed') {
+      return language === 'zh'
+        ? `${t.play.correctPrefixMixed}${roundData.targetCount}${t.play.correctSuffixMixed}`
+        : `${t.play.correctPrefixMixed} ${roundData.targetCount} ${t.play.correctSuffixMixed}`;
+    }
     return language === 'zh'
-      ? `${t.play.correctPrefix}${roundData.targetCount}辆${label}车。`
-      : `${t.play.correctPrefix} ${roundData.targetCount} ${label.toLowerCase()} ${t.play.correctSuffix}`;
+      ? `${t.play.correctPrefixColor}${roundData.targetCount}辆${label}车。`
+      : `${t.play.correctPrefixColor} ${roundData.targetCount} ${label.toLowerCase()} ${t.play.correctSuffixColor}`;
   };
 
   const formatProgressPrompt = (roundData: Round) =>
@@ -1288,13 +1322,25 @@ export function CarAdventureHero() {
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] opacity-55">
-                {t.play.kicker}
+                {round
+                  ? round.questionType === 'color' ? t.play.kickerColor
+                    : round.questionType === 'category' ? t.play.kickerCategory
+                    : round.questionType === 'mixed' ? t.play.kickerMixed
+                    : round.questionType === 'math' ? t.play.kickerMath
+                    : t.play.kickerColor
+                  : t.play.kickerColor}
               </p>
               <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
                 {formatFindPrompt(round)}
               </h1>
               <p className="mt-3 max-w-[580px] text-sm leading-6 opacity-70">
-                {t.play.instruction}
+                {round
+                  ? round.questionType === 'color' ? t.play.instructionColor
+                    : round.questionType === 'category' ? t.play.instructionCategory
+                    : round.questionType === 'mixed' ? t.play.instructionMixed
+                    : round.questionType === 'math' ? t.play.instructionMath
+                    : t.play.instructionColor
+                  : t.play.instructionColor}
               </p>
             </div>
 
