@@ -1150,46 +1150,47 @@ export function CarAdventureHero() {
 
       {view === 'garage' && (
         <main className="relative z-[5] mx-auto min-h-[100dvh] max-w-[1440px] px-4 pb-10 pt-28 sm:px-8">
-          <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] opacity-55">
-                {t.garage.kicker}
-              </p>
-              <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
-                {storage.collectedCards.length} / {markedVehicles.length}
-              </h1>
-            </div>
+          <div className="mb-7">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.18em] opacity-55">
+              {t.garage.kicker}
+            </p>
+            <h1 className="text-4xl font-extrabold uppercase tracking-[0.08em] sm:text-6xl">
+              {storage.collectedCards.length}
+            </h1>
           </div>
 
-          {storage.collectedCards.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <p className="text-2xl font-extrabold opacity-50">
-                {language === 'zh' ? '还没有车车，快去玩游戏吧！' : 'No cars yet, go play!'}
-              </p>
-              <button
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#202A36] px-8 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition-transform active:scale-95"
-                type="button"
-                onClick={() => openView('play')}
-              >
-                {language === 'zh' ? '去玩游戏 →' : 'Play →'}
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {VEHICLES.filter((v) => storage.collectedCards.includes(v.id)).map((vehicle) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {markedVehicles.map((vehicle) => {
+              const collected = storage.collectedCards.includes(vehicle.id);
+              return (
                 <article
                   key={vehicle.id}
-                  className="flex aspect-[4/3] flex-col items-center justify-center rounded-[28px] border border-[#202A36]/10 bg-white/35 p-3"
+                  className={`relative rounded-2xl border-2 p-2 transition-all ${
+                    collected
+                      ? 'border-[#202A36]/20 bg-white shadow-md'
+                      : 'border-[#202A36]/5 bg-[#F8F4F4]'
+                  }`}
+                  style={collected ? {} : { filter: 'grayscale(1) opacity(0.35)' }}
                 >
-                  <img className="h-[72%] w-full object-contain" src={assetUrl(vehicle.image)} alt={vehicle.name} />
-                  <strong className="mt-1 max-w-full truncate text-xs">{vehicle.name}</strong>
-                  <span className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] opacity-55">
-                    {colorLabel(colorForVehicle(vehicle))}
-                  </span>
+                  <img
+                    className="aspect-[3/4] w-full rounded-xl object-cover"
+                    src={`${import.meta.env.BASE_URL}cards/${encodeURIComponent(`卡牌-${vehicle.name}`)}.png`}
+                    alt={vehicle.name}
+                    loading="lazy"
+                  />
+                  <div className="mt-2 text-center">
+                    <strong
+                      className={`block truncate text-xs ${
+                        collected ? 'text-[#202A36]' : 'text-[#202A36]/30'
+                      }`}
+                    >
+                      {vehicle.name}
+                    </strong>
+                  </div>
                 </article>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </main>
       )}
 
