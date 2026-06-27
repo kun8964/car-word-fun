@@ -28,7 +28,7 @@ type HeroSlide = {
   cta: string;
 };
 
-type QuestionType = 'color' | 'category' | 'mixed';
+type QuestionType = 'color' | 'category' | 'mixed' | 'math';
 
 type MixedTarget = {
   color?: VehicleColor;
@@ -45,6 +45,8 @@ type Round = {
   options: Vehicle[];
   selectedIds: string[];
   matchedTargets: number[];  // which mixedTarget index each selected vehicle matches
+  mathQuestion?: string;
+  mathChoices?: number[];
   lastSelectedId: string | null;
   result: 'idle' | 'progress' | 'correct' | 'wrong';
 };
@@ -644,11 +646,67 @@ export function CarAdventureHero() {
       const canDoColor = availableColors.length > 0;
       const canDoCategory = categoriesWithCounts.length > 0;
       const canDoMixed = canDoColor && canDoCategory;
+      const canDoMath = storage.collectedCards.length >= 3;
       const roll = Math.random();
-      const useMixed = canDoMixed && roll < 0.15;
-      const useCategory = !useMixed && canDoCategory && (!canDoColor || Math.random() < 0.4);
+      const useMath = canDoMath && roll < 0.15;
+      const useMixed = !useMath && canDoMixed && roll < 0.30;
+      const useCategory = !useMath && !useMixed && canDoCategory && (!canDoColor || Math.random() < 0.4);
 
-      if (useMixed) {
+      if (useMath) {
+        // Math question: addition or subtraction based on collected vehicle counts
+        const collectedVehicles = VEHICLES.filter((v) => storage.collectedCards.includes(v.id));
+        const collectedByColor = new Map<VehicleColor, Vehicle[]>();
+        collectedVehicles.forEach((v) => {
+          const c = colorForVehicle(v);
+          if (!collectedByColor.has(c)) collectedByColor.set(c, []);
+          collectedByColor.get(c)!.push(v);
+        });
+        const colorEntries = Array.from(collectedByColor.entries()).filter(([, vs]) => vs.length >= 1);
+
+        let a: number, b: number, answer: number;
+        let questionText: string;
+        const isAddition = Math.random() < 0.6;
+
+        if (isAddition && colorEntries.length >= 2) {
+          const [c1, v1] = colorEntries[Math.floor(Math.random() * colorEntries.length)];
+          const remaining = colorEntries.filter(([c]) => c !== c1);
+          const [c2, v2] = remaining[Math.floor(Math.random() * remaining.length)];
+          a = Math.min(v1.length, 5);
+          b = Math.min(v2.length, 3);
+          answer = a + b;
+          questionText = language === 'zh'
+            ? `${a}辆${colorLabel(c1)} + ${b}辆${colorLabel(c2)} = ?`
+            : `${a} ${colorLabel(c1)} + ${b} ${colorLabel(c2)} = ?`;
+        } else {
+          const [c1, v1] = colorEntries[Math.floor(Math.random() * colorEntries.length)];
+          a = Math.min(v1.length, 8);
+          b = Math.floor(Math.random() * Math.min(a, 3)) + 1;
+          answer = a - b;
+          questionText = language === 'zh'
+            ? `${a}辆${colorLabel(c1)}，开走${b}辆 = ?`
+            : `${a} ${colorLabel(c1)}, ${b} leave = ?`;
+        }
+
+        // Generate answer choices (correct + 3 distractors)
+        const choices = new Set<number>([answer]);
+        while (choices.size < 4) {
+          const offset = Math.floor(Math.random() * 5) - 2;
+          const c = answer + offset;
+          if (c >= 0 && c <= 10) choices.add(c);
+        }
+
+        setRound({
+          questionType: 'math',
+          targetCount: answer,
+          mathQuestion: questionText,
+          mathChoices: shuffle(Array.from(choices)),
+          options: [],
+          selectedIds: [],
+          matchedTargets: [],
+          lastSelectedId: null,
+          result: 'idle',
+        });
+      } else if (useMixed) {
         // Mixed question: randomly pick type A (multi-color) or type B (color+category cross)
         const isCrossType = Math.random() < 0.5;
         let mixedTargets: MixedTarget[];
@@ -955,6 +1013,30 @@ export function CarAdventureHero() {
       ? `${t.play.progressPrefix}${roundData.selectedIds.length}${t.play.progressMiddle}${roundData.targetCount}${t.play.progressSuffix}`
       : `${t.play.progressPrefix} ${roundData.selectedIds.length} ${t.play.progressMiddle} ${roundData.targetCount}. ${t.play.progressSuffix}`;
 
+  const handleMathPick = useCallback((n: number) => {
+    if (!round || round.result === 'correct') return;
+    const correct = n === round.targetCount;
+    setRound({ ...round, lastSelectedId: String(n), result: correct ? 'correct' : 'wrong' });
+    if (correct) {
+      setScore((v) => v + 1);
+      const newStreak = storage.streak + 1;
+      setStorage((prev) => ({ ...prev, streak: newStreak }));
+      if (newStreak % 5 === 0) {
+        const collectedIds = new Set(storage.collectedCards);
+        const uncollected = markedVehicles.filter((v) => !collectedIds.has(v.id)).map((v) => v.id);
+        if (uncollected.length > 0) {
+          const rewardId = uncollected[Math.floor(Math.random() * uncollected.length)];
+          setShowReward(rewardId);
+          setStorage((prev) => ({ ...prev, collectedCards: [...prev.collectedCards, rewardId] }));
+        } else {
+          setShowAllCollected(true);
+        }
+      }
+    } else {
+      setStorage((prev) => ({ ...prev, streak: 0 }));
+    }
+  }, [round, storage.streak, storage.collectedCards, markedVehicles]);
+
   return (
     <div className="min-h-[100dvh] bg-[#F8F4F4] font-sans text-[#202A36]">
       <div className="pointer-events-none fixed inset-0 z-[1] opacity-20 mix-blend-soft-light">
@@ -1230,8 +1312,7 @@ export function CarAdventureHero() {
             </div>
           </div>
 
-          {round && (
-            <>
+          {round && <>
               <div
 	                className={`mb-5 rounded-[28px] border px-5 py-4 text-sm font-bold ${
 	                  round.result === 'correct'
@@ -1283,12 +1364,38 @@ export function CarAdventureHero() {
                 )}
               </div>
 
-	              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-	                {round.options.map((vehicle) => {
-	                  const selected = round.selectedIds.includes(vehicle.id);
-	                  const wrongSelected =
-	                    round.lastSelectedId === vehicle.id && round.result === 'wrong';
-	                  const correct = colorForVehicle(vehicle) === round.targetColor;
+              {round.questionType === 'math' && (
+                <div className="mb-5 rounded-[28px] border border-[#202A36]/10 bg-white/55 p-6 text-center">
+                  <p className="mb-6 text-2xl font-extrabold sm:text-4xl">{round.mathQuestion}</p>
+                  <div className="flex flex-wrap items-center justify-center gap-4">
+                    {round.mathChoices?.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`flex h-20 w-20 items-center justify-center rounded-2xl border-2 text-3xl font-extrabold transition-all active:scale-95 ${
+                          round.result === 'correct' && n === round.targetCount
+                            ? 'border-green-700 bg-green-700 text-white'
+                            : round.result === 'wrong' && round.lastSelectedId === String(n)
+                              ? 'border-red-700/45 bg-red-100/55 text-red-900'
+                              : 'border-[#202A36]/20 bg-white hover:border-[#202A36]/40'
+                        }`}
+                        onClick={() => handleMathPick(n)}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {round.questionType !== 'math' &&
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {round.options.map((vehicle) => {
+                  const selected = round.selectedIds.includes(vehicle.id);
+                  const wrongSelected =
+                    round.lastSelectedId === vehicle.id && round.result === 'wrong';
+                  const correct = round.questionType === 'category'
+                    ? categoryForVehicle(vehicle) === round.targetCategory
+                    : colorForVehicle(vehicle) === round.targetColor;
 
                   return (
                     <button
@@ -1319,9 +1426,10 @@ export function CarAdventureHero() {
                     </button>
                   );
                 })}
-              </div>
+              </div>}
             </>
-          )}
+            }
+
         </main>
       )}
 
