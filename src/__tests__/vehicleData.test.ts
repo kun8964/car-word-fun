@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { VEHICLES, COLOR_LABELS, Vehicle } from '../vehicleData';
+import { VEHICLES, VALID_COLORS, Vehicle } from '../vehicleData';
 
 describe('vehicleData', () => {
   it('should have 52 vehicles', () => {
@@ -11,7 +11,7 @@ describe('vehicleData', () => {
       expect(v.id).toBeTruthy();
       expect(v.name).toBeTruthy();
       expect(v.image).toBeTruthy();
-      expect(COLOR_LABELS[v.color]).toBeTruthy();
+      expect(VALID_COLORS).toContain(v.color);
       expect(v.category).toBeTruthy();
     });
   });

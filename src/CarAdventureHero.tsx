@@ -384,7 +384,6 @@ const CATEGORY_LABELS: Record<Language, Record<VehicleCategory, string>> = {
   },
 };
 const GAME_COLORS: VehicleColor[] = ['red', 'blue', 'yellow', 'green', 'white', 'black'];
-const TARGET_MATCH_COUNT = 3;
 
 const CARD_TRANSITION =
   'transform 650ms cubic-bezier(0.4,0,0.2,1), filter 650ms cubic-bezier(0.4,0,0.2,1), opacity 650ms cubic-bezier(0.4,0,0.2,1), left 650ms cubic-bezier(0.4,0,0.2,1), bottom 650ms cubic-bezier(0.4,0,0.2,1), width 650ms cubic-bezier(0.4,0,0.2,1)';
@@ -1787,11 +1786,6 @@ export function CarAdventureHero() {
           0% { transform: rotateY(0deg) scale(0.3); }
           50% { transform: rotateY(180deg) scale(1.05); }
           100% { transform: rotateY(360deg) scale(1); }
-        }
-        @keyframes cardShrink {
-          0% { transform: rotateY(360deg) scale(1); }
-          50% { transform: rotateY(540deg) scale(1.05); }
-          100% { transform: rotateY(720deg) scale(0.3); }
         }
       `}</style>
     </div>

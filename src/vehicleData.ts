@@ -2,8 +2,6 @@ export type VehicleColor = 'red' | 'blue' | 'yellow' | 'green' | 'white' | 'blac
 
 export type VehicleCategory = 'car' | 'race' | 'bus' | 'construction' | 'motorcycle' | 'tank' | 'watercraft' | 'offroad' | 'aircraft';
 
-export type VehicleLocation = 'land' | 'water' | 'air';
-
 export type Vehicle = {
   id: string;
   name: string;
@@ -12,22 +10,10 @@ export type Vehicle = {
   category: VehicleCategory;
 };
 
-export const COLOR_LABELS: Record<VehicleColor, string> = {
-  red: 'Red 红色',
-  blue: 'Blue 蓝色',
-  yellow: 'Yellow 黄色',
-  green: 'Green 绿色',
-  white: 'White 白色',
-  black: 'Black 黑色',
-  silver: 'Silver 银色',
-  orange: 'Orange 橙色',
-  gray: 'Gray 灰色',
-  brown: 'Brown 棕色',
-  camouflage: 'Camouflage 迷彩',
-  blackWhite: 'B&W 黑白',
-  other: 'Other 其它',
-  unknown: 'Unmarked 未标记',
-};
+export const VALID_COLORS: VehicleColor[] = [
+  'red', 'blue', 'yellow', 'green', 'white', 'black',
+  'silver', 'orange', 'gray', 'brown', 'camouflage', 'blackWhite', 'other', 'unknown',
+];
 
 export const VEHICLES: Vehicle[] = [
   {
